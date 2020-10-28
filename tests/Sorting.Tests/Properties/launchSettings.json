@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Semester.Tests": {
+      "commandName": "Project",
+      "commandLineArgs": "--run"
+    }
+  }
+}

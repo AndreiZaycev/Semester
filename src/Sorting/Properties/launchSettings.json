@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Sorting": {
+      "commandName": "Project",
+      "commandLineArgs": "--readfilearray"
+    }
+  }
+}
