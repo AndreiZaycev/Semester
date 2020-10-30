@@ -3,26 +3,32 @@ module Homework4
     let ReadfileArray file =
         try
             let a = System.IO.File.ReadAllLines file
-            if a = [||]
-            then [||]
-            else
-                let Array = Array.zeroCreate (a.Length)
-                let mutable k = 0 
-                for i in a do            
-                    Array.[k] <- int (i.Trim()) 
-                    k <- k + 1
-                Array
+            let Array = Array.zeroCreate (a.Length)
+            let mutable k = 0 
+            for i in a do            
+                Array.[k] <- int (i.Trim()) 
+                k <- k + 1
+            Array
         with
             | :? System.IO.FileNotFoundException ->
                 failwith "Given file has not been found"
             | :? System.IO.IOException ->
                 failwith "Invalid file name"
-    let ArrayToString (array: array<int>) = 
-        let mutable u = ""
-        for i in 0 .. array.Length - 1 do
-            u <- u + string array.[i]
-            u <- u + "\n"
-        u    
+    let ReadfileList file =
+        try
+            let a = System.IO.File.ReadAllLines file
+            if a.Length = 0
+            then []
+            else
+                let mutable l = []
+                for i in 0 .. a.Length - 1 do
+                    l <- l @ [int (a.[i].Trim())]
+                l            
+        with
+            | :? System.IO.FileNotFoundException ->
+                failwith "Given file has not been found"
+            | :? System.IO.IOException ->
+                failwith "Invalid file name"
     let SortBubble (x: array<int>) =       
         for i = 0 to x.Length - 1 do
             for j = i + 1 to x.Length - 1 do
@@ -37,10 +43,15 @@ module Homework4
         a
     let WriteArray file (x: array<int>) =
         let mutable s = ""
-        for i = 0 to x.Length - 1 do
+        for i in 0 .. x.Length - 1 do
             s <- s + string x.[i] + "\n"
         Write file s
-    let SortBubbleList x =
+    let WriteList file (x: list<int>) =
+        let mutable s = "" 
+        for i in 0 .. x.Length - 1 do
+            s <- s + string x.[i] + "\n"
+        Write file s
+    let SortBubbleList (x: list<int>) =
         let mutable k = x
         let rec _go x =
             match x with
@@ -51,7 +62,7 @@ module Homework4
         for i in x do
             k <- _go k
         k          
-    let QuickSortList file =
+    let QuickSortList (file: list<int>) =
         let rec QuickList = function
         | [] -> []
         | pivot :: tl ->
@@ -84,21 +95,21 @@ module Homework4
                             k1 <- k1 + 1               
                 Array.append (Array.append (Divide array1) [|t.[pivot]|] ) (Divide array2)
         Divide x       // В общем я не особо понимаю какой из них является квик сортом поэтому оставлю оба))      
-    let QuickArraySort2 x =
+    let QuickArraySort2 (x: array<int>) =
         let rec _go = function
         | [||] -> [||]
         | x when x.Length < 2 -> x
         | x -> 
             let left, (right, pivot) = Array.partition (fun i -> i < x.[0]) x |> (fun (right, pivot) -> right, pivot |> Array.partition (fun n -> n <> x.[0]))
             Array.append (Array.append (left |> _go) pivot) (right |> _go)
-        _go x      
+        _go x     
     let Packing32to64 (x: int32, y: int32) =
         if y >= 0
         then (int64 x <<< 32) + int64 y 
-        else ((int64 x <<< 32) + 4294967296L) + int64 y
+        else ((int64 x <<< 32) + 4294967296L) + int64 y 
     let Unpacking64to32 (x: int64) =
         let o = x >>> 32 |> int32
-        let t = (x <<< 32) >>> 32 |> int32
+        let t = (x <<< 32) >>> 32 |> int32             
         (o,t)
     let Packing16to64 (x: int16, y: int16, z: int16, v: int16) =
         let mutable a32 = 0

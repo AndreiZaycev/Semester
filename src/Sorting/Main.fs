@@ -25,56 +25,32 @@ module Main =
         let parser = ArgumentParser.Create<CLIArguments>(programName = "Sorting")
         try 
         let results = parser.Parse argv
+        let SortFunction _function =
+            printfn ("Укажите путь к файлу")
+            let x = Homework4.ReadfileArray (Console.ReadLine()) 
+            let t = _function x 
+            printfn ("Отсортированный массив  %A") t
+            printfn ("Введите путь, по которому файл будет переписан")
+            let o = Console.ReadLine() |> string
+            Homework4.WriteArray o t
+        let SortFunctionLists _function =
+            printfn ("Укажите путь к файлу")
+            let x = Homework4.ReadfileList (Console.ReadLine()) 
+            let t = _function x
+            printfn ("Отсортированный массив  %A") t
+            printfn ("Введите путь, по которому файл будет переписан")
+            let o = Console.ReadLine() |> string
+            Homework4.WriteList o t
         if results.Contains SortBubble
-        then
-            printfn ("Укажите путь к файлу")
-            let x = Homework4.ReadfileArray (Console.ReadLine()) 
-            let t = Homework4.SortBubble x 
-            printfn ("Отсортированный массив  %A") t
-            printfn ("Введите путь, по которому файл будет переписан")
-            let o = Console.ReadLine() |> string
-            let i = t |> Homework4.ArrayToString
-            Homework4.Write o i
+        then SortFunction Homework4.SortBubble
         elif results.Contains SortBubbleList
-        then
-            printfn ("Укажите путь к файлу")
-            let x = Homework4.ReadfileArray (Console.ReadLine()) |> List.ofArray
-            let t = Homework4.SortBubbleList x
-            printfn ("Отсортированный лист  %A") t
-            printfn ("Введите путь, по которому файл будет переписан")
-            let o = Console.ReadLine() |> string
-            let i = t |> Array.ofList |> Homework4.ArrayToString
-            Homework4.Write o i
+        then SortFunctionLists Homework4.SortBubbleList
         elif results.Contains QuickSortList
-        then
-            printfn ("Укажите путь к файлу")
-            let x = Homework4.ReadfileArray (Console.ReadLine()) |> List.ofArray
-            let t = Homework4.QuickSortList x
-            printfn ("Отсортированный массив  %A") t
-            printfn ("Введите путь, по которому файл будет переписан")
-            let i = t |> Array.ofList |> Homework4.ArrayToString
-            let o = Console.ReadLine() |> string
-            Homework4.Write o i
+        then SortFunctionLists Homework4.QuickSortList      
         elif results.Contains QuickArraySort2
-        then
-            printfn ("Укажите путь к файлу")
-            let x = Homework4.ReadfileArray (Console.ReadLine()) 
-            let t = Homework4.QuickArraySort2 x
-            printfn ("Отсортированный массив %A") t
-            printfn ("Введите путь, по которому файл будет переписан")           
-            let o = Console.ReadLine() |> string
-            let i = t |> Homework4.ArrayToString
-            Homework4.Write o i
+        then SortFunction Homework4.QuickArraySort2
         elif results.Contains QuickArraySort1
-        then
-            printfn ("Укажите путь к файлу")
-            let x = Homework4.ReadfileArray (Console.ReadLine()) 
-            let t = Homework4.QuickArraySort1 x
-            printfn ("Отсортированный массив %A") t
-            printfn ("Введите путь, по которому файл будет переписан")
-            let o = Console.ReadLine() |> string
-            let i = t |> Homework4.ArrayToString
-            Homework4.Write o i
+        then SortFunction Homework4.QuickArraySort1           
         elif results.Contains Unpacking64to32
         then
             printfn ("Введите два числа")
