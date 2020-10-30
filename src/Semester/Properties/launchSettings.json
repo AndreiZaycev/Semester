@@ -1,12 +1,9 @@
 {
   "profiles": {
-    "Semester": {
+    "Sorting": {
       "commandName": "Project",
-<<<<<<< Updated upstream
-      "commandLineArgs": "--sixthtask"
-=======
-      "commandLineArgs": "--ftask"
->>>>>>> Stashed changes
+      "commandLineArgs": "--sortbubblelist"
     }
   }
+}
 }

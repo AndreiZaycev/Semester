@@ -16,6 +16,7 @@
     
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="homework3.fs" />
     <Compile Include="hometaskNumberTwo.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <None Include="App.config" />

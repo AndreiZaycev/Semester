@@ -9,7 +9,13 @@ module Main =
         | Thirdtask 
         | Fourthtask
         | Fifthtask
-        | Sixthtask        
+        | Sixthtask
+        | Task7
+        | Task8
+        | Task9
+        | Task10
+        | Task11
+        | Task12
         interface IArgParserTemplate with
             member s.Usage =
                 match s with
@@ -19,6 +25,12 @@ module Main =
                 | Fourthtask _ -> "Calculates indexes of array elements that lie outside the range specified by numbers"
                 | Fifthtask _ -> "Changing the array elements in some places"
                 | Sixthtask _ -> "Changes element i to element j"
+                | Task7 _ -> "The Fibonacci number by recursive method"
+                | Task8 _ -> "The Fibonacci number by iterative method"
+                | Task9 _ -> "Tail recursion"
+                | Task10 _ -> "Matrix multiplication"
+                | Task11 _ -> "Matrix multiplication for log "
+                | Task12 _ -> "Fibonacci numbers up to the specified value"       
     [<EntryPoint>]
      let main (argv: string array) =
         try
@@ -78,7 +90,42 @@ module Main =
                  let v = Console.ReadLine() |> int                            
                  let arrayizmeneniy = domashka.Sixthtask array z v 
                  printfn ("Измененный массив")
-                 printfn ("%A") arrayizmeneniy                     
+                 printfn ("%A") arrayizmeneniy
+         elif results.Contains Task7 then
+             printfn ("Введите число фибоначи, которое хотите вычислить")
+             let n = Console.ReadLine() |> int
+             let result = domashka2.Task7 n
+             printfn ("Число фибоначи равно =")
+             printfn ("%A") result            
+         elif results.Contains Task8 then
+            printfn ("Введите число фибоначи, которое хотите вычислить")
+            let t = Console.ReadLine() |> int
+            let result = domashka2.Task8 t
+            printfn ("Число фибоначи равно =")
+            printfn ("%A") result
+         elif results.Contains Task9 then
+            printfn ("Введите число фибоначи, которое хотите вычислить")
+            let q = Console.ReadLine() |> int
+            let result = domashka2.Task9 q
+            printfn ("Число фибоначи равно =")
+            printfn ("%A") result
+         elif results.Contains Task10 then
+            printfn ("Введите число фибоначи, которое хотите вычислить")
+            let q = Console.ReadLine() |> int
+            let result = domashka2.Task10 q           
+            printfn ("Число фибоначи равно =")
+            printfn ("%A") (result)
+         elif results.Contains Task11 then
+            printfn ("Введите число фибоначи, которое хотите вычислить")
+            let y = Console.ReadLine() |> int
+            let result = domashka2.Task11 y           
+            printfn ("Число фибоначи равно =")
+            printfn ("%A") (result)
+         elif results.Contains Task12 then
+            printfn ("Введите число, до которого выведутся числа фибоначи ")
+            let t = Console.ReadLine() |> int
+            let result = domashka2.Task12 t 
+            printfn ("%A") result 
          else
             
             parser.PrintUsage() |> printfn "%s"
