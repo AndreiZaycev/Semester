@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MyList": {
+      "commandName": "Project",
+      "commandLineArgs": "--functomylist"
+    }
+  }
+}
