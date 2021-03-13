@@ -20,12 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <FsYacc Include="CalcParser2.fsy">
-        <OtherFlags>--module CalcParser</OtherFlags>
-    </FsYacc>
-    <FsLex Include="Lexer2.fsl">
-        <OtherFlags>--module Lexer --unicode</OtherFlags>
-    </FsLex>
     <PackageReference Include="Argu" Version="6.1.1" />
     <PackageReference Include="FsLexYacc" Version="10.0.0" />
     <PackageReference Include="FsLexYacc.Runtime" Version="10.0.0" />
