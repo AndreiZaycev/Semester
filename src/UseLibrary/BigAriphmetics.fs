@@ -14,8 +14,29 @@ type BigInt =
     val signOfNumber: sign
     val digits: MyList<int>
     new ((k: int), p) = {signOfNumber = (detect k); digits = p}
-    member this.sign = if this.signOfNumber = Positive then 1 else -1 
+    member this.sign = if this.signOfNumber = Positive then 1 else -1
+    static member convertString (y: string) =
+        if y.Length = 0
+        then failwith "input not empty data!"
+        else
+            let sgn, x =  
+                match y.Contains '-' with
+                | true -> -1, y.[1..(y.Length - 1)]
+                | false -> 1, y
+            let rec _go acc (x: string) =
+                match x.Length with
+                | 0 -> acc 
+                | _ -> _go (Cons((string x.[0]) |> int |> abs, acc)) x.[1..(x.Length - 1)]
+            BigInt(sgn, (rev (_go (One 0) x)) |> tail)
+    static member convertStringToNegative (y: string) =
+        BigInt(-1, (BigInt.convertString y).digits)
 
+let toInt (data: BigInt) =
+    let x = fold (fun acc elem -> acc + string elem) "" data.digits |> int
+    if data.sign = 1
+    then x
+    else -x
+        
 let initPosInt x = BigInt (1, x) 
 
 let createBigInt length =
@@ -107,7 +128,7 @@ let multiply (x: BigInt) (y: BigInt) =
 // умножалка по модулю
 let private absMul x y = (multiply (BigInt (1, x)) (BigInt (1, y))).digits
 
-let division (x: BigInt) (y: BigInt) =
+let divAndRem (x: BigInt) (y: BigInt) =
     let divident, divisor = (deleteZeroes x.digits), (deleteZeroes y.digits)
     if divisor = One 0
     then failwith "cannot divide"              
@@ -115,8 +136,8 @@ let division (x: BigInt) (y: BigInt) =
         let returnRemainder divident0 counter =
             let mutable counter1 = counter
             while compareNumbers divident0 (absMul (One counter1) divisor) do counter1 <- counter1 + 1
-            (One (counter1 - 1)), (sub (initPosInt divident0) (initPosInt (absMul (One (counter1 - 1)) divisor))).digits
-        BigInt (x.sign * y.sign,
+            (One (counter1 - 1)), (sub (initPosInt divident0) (initPosInt (absMul (One (counter1 - 1)) divisor))).digits        
+        let first, second =
             fold
                 (fun (acc, current) elem ->
                     let currentInstance = (deleteZeroes (concat current (One elem)))
@@ -128,4 +149,41 @@ let division (x: BigInt) (y: BigInt) =
                         let dividentValue, remainder = returnRemainder currentInstance 0
                         (deleteZeroes (concat acc dividentValue), remainder))
                 (One 0, One 0)
-                (divident) |> fst)  
+                (divident)
+        (deleteZeroes first, deleteZeroes second)
+
+let absolute (x:BigInt) = BigInt(1, x.digits)
+
+let division (x: BigInt) (y: BigInt) =
+    BigInt (x.sign * y.sign, divAndRem x y |> fst)
+
+let remDiv (x: BigInt) (y: BigInt) =
+    let semiAns = BigInt (1, divAndRem x y |> snd)
+    match x.sign, y.sign with
+    | -1, 1 -> sub y semiAns
+    | 1, -1 -> semiAns
+    | -1, -1 -> sub (absolute y) semiAns
+    | 1, 1 -> semiAns
+    | _, _ -> failwith "cannot be in this case"
+
+let power (x: BigInt) (pow: BigInt) =
+    let rec _go r (p: BigInt) =
+        match p.digits with
+        | One 0 -> BigInt(1, One 1)
+        | One 1 -> r
+        | _ -> _go (multiply r x) (sub p (BigInt(1, One 1)))
+
+    if pow.sign = -1 then failwith "Positive power expected"
+    else _go x pow
+
+let toBinary (x: BigInt) =
+    let rec _go l r =
+        match l with
+        | One 0 -> r
+        | _ ->
+            let divd, rem = divAndRem (BigInt(1, l)) (BigInt(1, One 2))
+            _go divd (Cons(head rem, r))
+
+    let divd, rem = divAndRem (BigInt(1, x.digits)) (BigInt(1, One 2))
+
+    BigInt(x.sign, _go divd rem)
