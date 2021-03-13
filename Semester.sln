@@ -34,8 +34,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Calculator", "Calculator\Ca
 		{D75903F8-FCD2-42F3-8F0E-38AD9B2D5031} = {D75903F8-FCD2-42F3-8F0E-38AD9B2D5031}
 	EndProjectSection
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Interpretator", "..\homeworkProgramming\Interpretator\Interpretator.fsproj", "{21F3BAD0-C366-4408-BFA3-A64EB0C8BC3E}"
-EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Calc.Tests", "tests\Calc.Tests\Calc.Tests.fsproj", "{FD15A95E-6A9E-4F20-AB07-CE3CC8720AF0}"
 EndProject
 Global
