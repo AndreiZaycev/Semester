@@ -102,8 +102,8 @@ let runtimes = [
 
 let disableCodeCoverage = environVarAsBoolOrDefault "DISABLE_COVERAGE" false
 
-let githubToken = Environment.environVarOrNone "GITHUB_TOKEN"
-Option.iter(TraceSecrets.register "<GITHUB_TOKEN>")
+let githubToken = Environment.environVarOrNone "MY_COOL_TOKEN"
+Option.iter(TraceSecrets.register "MY_COOL_TOKEN")
 
 //-----------------------------------------------------------------------------
 // Helpers
@@ -575,7 +575,7 @@ Target.create "UpdateChangelog" updateChangelog
 Target.createBuildFailure "RevertChangelog" revertChangelog  // Do NOT put this in the dependency chain
 Target.createFinal "DeleteChangelogBackupFile" deleteChangelogBackupFile  // Do NOT put this in the dependency chain
 Target.create "DotnetBuild" dotnetBuild
-Target.create "FSharpAnalyzers" fsharpAnalyzers
+//Target.create "FSharpAnalyzers" fsharpAnalyzers
 Target.create "DotnetTest" dotnetTest
 Target.create "GenerateCoverageReport" generateCoverageReport
 Target.create "WatchApp" watchApp
@@ -610,7 +610,7 @@ Target.create "Release" ignore
 
 "DotnetRestore"
     ==> "DotnetBuild"
-    ==> "FSharpAnalyzers"
+    //==> "FSharpAnalyzers"
     ==> "DotnetTest"
     =?> ("GenerateCoverageReport", not disableCodeCoverage)
     ==> "CreatePackages"

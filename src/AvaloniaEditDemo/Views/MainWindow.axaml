@@ -1,0 +1,78 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AvaloniaEditDemo.ViewModels;assembly=AvaloniaEditDemo"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:AvalonEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+        x:Class="AvaloniaEditDemo.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="AvaloniaEditDemo">
+    <DockPanel>
+        <StackPanel Orientation="Horizontal"
+                    DockPanel.Dock="Top"
+                    Spacing="5"
+                    Margin="3">
+            <Button Content="Run" Name="Run"/>
+            <Button Name="OpenFile" Content="OpenFile" />
+            <Button Name="CreateFile" Content="CreateFile" />
+			<Button Name="SaveFile" Content="SaveFile" />
+            
+        </StackPanel>
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="0.25*" />
+			</Grid.RowDefinitions>
+				<ScrollViewer Name="scrollViewer" VerticalScrollBarVisibility="Visible">
+					<Grid Grid.Row="0">
+						<Grid HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Visible">
+							<Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
+								<StackPanel Name="stackPanel" Background="Yellow">
+									
+								</StackPanel>
+							</Border>
+						</Grid>
+						<Grid>
+								<Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
+									<AvalonEdit:TextEditor 
+															Name="Editor"
+															Background="Black"
+															Margin="50,0,0,0"
+															Foreground="Black"
+															HorizontalScrollBarVisibility="Hidden"
+															VerticalScrollBarVisibility="Hidden"
+															TextBlock.FontSize="14">
+					
+									</AvalonEdit:TextEditor>
+								</Border>
+						</Grid>
+					</Grid>		
+				</ScrollViewer>
+			<GridSplitter Grid.Row="1"/>
+			<Grid Grid.Row="2">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="0.1*" />
+				</Grid.ColumnDefinitions>
+				<Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="*" />
+						</Grid.RowDefinitions>
+						<TextBlock Text="Orthodox GUI"/>
+						<TextBox AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Name="console" Grid.Row="2"/>
+					</Grid>
+				</Border>
+				<GridSplitter Grid.Column="1" />
+					<Border BorderBrush="Black" BorderThickness="1" Grid.Column="2">
+						<Image Name="mishka" Source="/Assets/RussianBear.jpg" HorizontalAlignment="Right"></Image>
+					</Border>					
+			</Grid>
+		</Grid>
+    </DockPanel>
+</Window>
