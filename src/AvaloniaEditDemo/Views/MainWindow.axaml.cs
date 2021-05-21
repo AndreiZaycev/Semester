@@ -33,6 +33,7 @@ namespace AvaloniaEditDemo.Views
     public class MainWindow : Window
     {
         private readonly TextEditor _textEditor;
+        private CompletionWindow _completionWindow;
         private OverloadInsightWindow _insightWindow;
         private Button _runButton;
         private Button _openFileButton;
