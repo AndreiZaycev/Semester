@@ -28,7 +28,7 @@
 				<ScrollViewer Name="scrollViewer" VerticalScrollBarVisibility="Visible">
 					<Grid Grid.Row="0">
 						<Grid HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Visible">
-							<Border BorderBrush="Black" BorderThickness="0" Grid.Column="0">
+							<Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
 								<StackPanel Name="stackPanel" Background="Yellow">
 									
 								</StackPanel>
@@ -49,8 +49,8 @@
 								</Border>
 						</Grid>
 					</Grid>		
-				</ScrollViewer>             
-			<GridSplitter Grid.Row="1" ResizeDirection="Rows"/>
+				</ScrollViewer>
+			<GridSplitter Grid.Row="1"/>
 			<Grid Grid.Row="2">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="*" />
@@ -65,12 +65,12 @@
 							<RowDefinition Height="*" />
 						</Grid.RowDefinitions>
 						<TextBlock Text="Orthodox GUI"/>
-						<TextBox AcceptsReturn="True" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Name="console" Grid.Row="2"/>
+						<TextBox AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Name="console" Grid.Row="2"/>
 					</Grid>
 				</Border>
-				<GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
+				<GridSplitter Grid.Column="1" />
 					<Border BorderBrush="Black" BorderThickness="1" Grid.Column="2">
-						<Image Name="mishka" Source="/Assets/RussianBear.jpg" HorizontalAlignment="Right" Stretch="Fill"></Image>
+						<Image Name="mishka" Source="/Assets/RussianBear.jpg" HorizontalAlignment="Right"></Image>
 					</Border>					
 			</Grid>
 		</Grid>
