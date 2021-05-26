@@ -21,7 +21,7 @@ using AvaloniaEdit.Rendering;
 using Arithm;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
-
+using Avalonia.Threading;
 
 namespace AvaloniaEditDemo.Views
 {
@@ -132,11 +132,27 @@ namespace AvaloniaEditDemo.Views
                 {
                     string text = _textEditor.Text;
                     var Parsed = Arithm.Main.parse(text);
-                    var task = Task<Dictionary<string, string>>.Factory.StartNew(() => Arithm.Interpreter.run(Parsed).Item3);                           
-                    foreach (var keys in task.Result.Values)
-                    {                     
-                        _console.Text += keys + "\r\n";
-                    }
+                    var task = new Task<Queue<string>>(() =>
+                        {
+                            Queue<string> _que = new Queue<string>();
+                            var dict = Arithm.Interpreter.run(Parsed).Item3;
+                            foreach (var keys in dict.Values)
+                            {
+                                _que.Enqueue(keys);
+                            }
+                            return _que;
+                        }
+                    );
+                    task.ContinueWith(t =>
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            _console.Text = String.Empty;
+                            foreach (var queres in t.Result)
+                            {
+                                _console.Text += queres + "\r\n";
+                            }
+                        }));
+                    task.Start();
                 }
                 catch (Exception)
                 {
@@ -147,18 +163,34 @@ namespace AvaloniaEditDemo.Views
             {
                 try
                 {
-                    string textToExecute = "";
+                    string textToExecute = string.Empty;
                     string[] lines = _textEditor.Text.Split("\r\n");
                     for (var counter = 0; counter < line; counter++)
                     {
                         textToExecute += lines[counter] + "\r\n";
                     }
                     var Parsed = Arithm.Main.parse(textToExecute);
-                    var task = Task<Dictionary<string, string>>.Factory.StartNew(() => Arithm.Interpreter.run(Parsed).Item2);             
-                    foreach (var keys in task.Result.Keys)
-                    {  
-                        _console.Text += $"{keys} = {task.Result[keys]}\r\n";
-                    }
+                    var task = new Task<Queue<(string, string)>>(() =>
+                        {
+                            var _que = new Queue<(string, string)>();
+                            var dict = Arithm.Interpreter.run(Parsed).Item2;
+                            foreach (var keys in dict.Keys)
+                            {
+                                _que.Enqueue((keys[^2..].Replace("\"", string.Empty), dict[keys]));
+                            }
+                            return _que;
+                        });
+                    task.ContinueWith(t => 
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            _console.Text = String.Empty;
+                            foreach ((string keys, string values) in t.Result)
+                            {
+                                _console.Text += $"{keys} = {values}\r\n";
+                            }
+                        }                        
+                    ));
+                    task.Start();
                 }                                  
                 catch (Exception)
                 {
