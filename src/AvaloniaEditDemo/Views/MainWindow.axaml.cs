@@ -25,6 +25,7 @@ using Arithm;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using Avalonia.Threading;
+using System.Threading.Tasks;
 
 namespace AvaloniaEditDemo.Views
 {
@@ -33,8 +34,6 @@ namespace AvaloniaEditDemo.Views
     public class MainWindow : Window
     {
         private readonly TextEditor _textEditor;
-        private CompletionWindow _completionWindow;
-        private OverloadInsightWindow _insightWindow;
         private Button _runButton;
         private Button _openFileButton;
         private Button _createFileButton;
@@ -50,7 +49,6 @@ namespace AvaloniaEditDemo.Views
             _textEditor.Background = Brushes.Transparent;
             _textEditor.ShowLineNumbers = true;
             _textEditor.TextChanged += _textEditor_TextChanged;
-            _textEditor.TextArea.TextEntering += textEditor_TextArea_TextEntering;
             _textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
             _textEditor.SyntaxHighlighting.MainRuleSet.Name = "print";
             _textEditor.TextArea.IndentationStrategy = new CSharpIndentationStrategy();
@@ -72,7 +70,7 @@ namespace AvaloniaEditDemo.Views
             _openFileButton.Click += _openControlBtn_Click; 
 
             _console = this.FindControl<TextBox>("console");
-            var but = new Button() { Height = 16.8, Margin = Thickness.Parse("0,0"), Width = 20, Background = Brush.Parse("Yellow") };
+            var but = new Button() { Height = 20, Margin = Thickness.Parse("0,0"), Width = 20, Background = Brush.Parse("Yellow") };
             but.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
@@ -251,19 +249,6 @@ namespace AvaloniaEditDemo.Views
                 }
             }          
         } 
-        void textEditor_TextArea_TextEntering(object sender, TextInputEventArgs e)
-        {
-            if (e.Text.Length > 0 && _completionWindow != null)
-            {
-                if (!char.IsLetterOrDigit(e.Text[0]))
-                {
-
-                    _completionWindow.CompletionList.RequestInsertion(e);
-                }
-            }
-
-            _insightWindow?.Hide();
-        }
         private class MyOverloadProvider : IOverloadProvider
         {
             private readonly IList<(string header, string content)> _items;
@@ -347,7 +332,6 @@ namespace AvaloniaEditDemo.Views
             try
             {
                 System.IO.File.WriteAllText(path, _textEditor.Text);
-                _completionWindow.Show();
             }
             catch (Exception)
             { }
