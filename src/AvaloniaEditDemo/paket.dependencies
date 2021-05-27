@@ -1,1 +1,2 @@
+version 5.245.1
 source "https://nuget.pkg.github.com/kirillgarbar/index.json"
