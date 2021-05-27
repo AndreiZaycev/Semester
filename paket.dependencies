@@ -1,5 +1,4 @@
-version 5.245.1
-
+version 5.247.4
 source https://www.nuget.org/api/v2
 source https://api.nuget.org/v3/index.json
 storage: none
@@ -18,18 +17,18 @@ group Build
     source https://www.nuget.org/api/v2
     source https://api.nuget.org/v3/index.json
     nuget Argu
-    nuget Fake.IO.FileSystem 5.20.0
-    nuget Fake.Core.Target 5.20.0
-    nuget Fake.Core.ReleaseNotes 5.20.0
-    nuget FAKE.Core.Environment 5.20.0
-    nuget Fake.DotNet.Cli 5.20.0
-    nuget FAKE.Core.Process 5.20.0
-    nuget Fake.DotNet.AssemblyInfoFile 5.20.0
-    nuget Fake.Tools.Git 5.20.0
-    nuget Fake.DotNet.Paket 5.20.0
-    nuget Fake.Api.GitHub 5.20.0
-    nuget Fake.BuildServer.AppVeyor 5.20.0
-    nuget Fake.BuildServer.Travis 5.20.0
+    nuget Fake.IO.FileSystem 5.20.2
+    nuget Fake.Core.Target 5.20.2
+    nuget Fake.Core.ReleaseNotes 5.20.2
+    nuget FAKE.Core.Environment 5.20.2
+    nuget Fake.DotNet.Cli 5.20.2
+    nuget FAKE.Core.Process 5.20.2
+    nuget Fake.DotNet.AssemblyInfoFile 5.20.2
+    nuget Fake.Tools.Git 5.20.2
+    nuget Fake.DotNet.Paket 5.20.2
+    nuget Fake.Api.GitHub 5.20.2
+    nuget Fake.BuildServer.AppVeyor 5.20.2
+    nuget Fake.BuildServer.Travis 5.20.2
     nuget Fantomas
 
 group Analyzers
