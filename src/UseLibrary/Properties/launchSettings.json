@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UseLibrary": {
+      "commandName": "Project",
+      "commandLineArgs": "--rows 4 --cols 4 --amount 1 --sparsity 0,2 --path \"C:\\Users\\Zver\\Desktop\\matrixes\" --type int"
+    }
+  }
+}
