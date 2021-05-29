@@ -17,7 +17,6 @@ let readGeneratedMatrix file =
             OutputMtx.[i, j] <- this.[j]
     OutputMtx
         
-
 [<Tests>]
 let treesOperations =
     testList "check all operations"
