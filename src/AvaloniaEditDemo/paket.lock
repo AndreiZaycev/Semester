@@ -1,3 +1,2 @@
-remote: "https://nuget.pkg.github.com/kirillgarbar/index.json"
-remote: "https://nuget.pkg.github.com/AndreiZaycev/index.json"
-Arithm (1.0.4)
+remote: https://nuget.pkg.github.com/kirillgarbar/index.json
+  Arithm (1.0.2)

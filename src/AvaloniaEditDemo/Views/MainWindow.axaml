@@ -9,7 +9,7 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="AvaloniaEditDemo">
     <DockPanel>
-        <StackPanel Name="_stackPanel" Orientation="Horizontal"
+        <StackPanel Orientation="Horizontal"
                     DockPanel.Dock="Top"
                     Spacing="5"
                     Margin="3">
@@ -64,7 +64,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TextBlock Name="executionStatus" Text="Console"/>
+                        <TextBlock Text="Orthodox GUI"/>
                         <TextBox AcceptsReturn="True" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Name="console" Grid.Row="2"/>
                     </Grid>
                 </Border>
