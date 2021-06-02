@@ -1,16 +1,21 @@
 module TestsForGena
+
 open Generator
+
+open bMatrix
+
 open Expecto
 
+open Main
 
 let readGeneratedMatrix file =
     let readLines = System.IO.File.ReadAllLines(file)
-    let outputMtx = Array2D.zeroCreate readLines.Length (readLines.[0].Split(" ").Length - 1)
+    let OutputMtx = Array2D.zeroCreate readLines.Length (readLines.[0].Split(" ").Length - 1)
     for i = 0 to readLines.Length - 1 do
         let this = readLines.[i].Split(" ")
         for j = 0 to this.Length - 2 do
-            outputMtx.[i, j] <- this.[j]
-    outputMtx
+            OutputMtx.[i, j] <- this.[j]
+    OutputMtx
         
 [<Tests>]
 let treesOperations =

@@ -1,7 +1,11 @@
 module SparseMatrix
+
 open AlgebraicStruct
+
 open System
+
 open System.Collections.Generic
+
 open bMatrix
 
 let private getPowOfTwo number =
@@ -54,12 +58,12 @@ type QuadTreeMatrix<'t when 't : equality> =
             && this.tree = this.tree
         | _ -> false
 
-    static member MatchTrees nw ne se sw =
+    static member matchTrees nw ne se sw =
         match nw, ne, se, sw with
         | None, None, None, None -> None
         | _, _, _, _ -> Node(nw, ne, se, sw)
 
-    static member Sum group (treeMtx: QuadTreeMatrix<'t>) (treeMtx1: QuadTreeMatrix<'t>) =
+    static member sum group (treeMtx: QuadTreeMatrix<'t>) (treeMtx1: QuadTreeMatrix<'t>) =
         if treeMtx.numOfRows <> treeMtx1.numOfRows || treeMtx.numOfCols <> treeMtx1.numOfCols
         then failwith "cannot sum various sizes"
         else
@@ -87,12 +91,12 @@ type QuadTreeMatrix<'t when 't : equality> =
 
                     let fourth = _go tl3 tail3
 
-                    QuadTreeMatrix<'t>.MatchTrees first second third fourth
+                    QuadTreeMatrix<'t>.matchTrees first second third fourth
                 | _, _ -> failwith "cannot sum trees with different dimensions"
 
             QuadTreeMatrix(treeMtx.numOfRows, treeMtx.numOfCols, _go x y)
 
-    static member Restruct (point: Pair) var1 var2 var3 var4 =
+    static member private deconstruct (point: Pair) var1 var2 var3 var4 =
         Pair((int point.x - fst var1) * 1<Row>, (int point.y - snd var1) * 1<Col>),
 
         Pair((int point.x + fst var2) * 1<Row>, (int point.y - snd var2) * 1<Col>),
@@ -101,7 +105,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
         Pair((int point.x + fst var4) * 1<Row>, (int point.y + snd var4) * 1<Col>)
 
-    static member ToMatrix (tree: QuadTreeMatrix<'t>) =
+    static member toMatrix (tree: QuadTreeMatrix<'t>) =
         let size = getPowOfTwo (max tree.numOfRows tree.numOfCols)
 
         let outputHash = new HashSet<_>()
@@ -111,12 +115,12 @@ type QuadTreeMatrix<'t when 't : equality> =
             | Leaf t, _ -> outputHash.Add(Triple(int point.x, int point.y, t)) |> ignore
             | None, _ -> ()
             | Node (q1, q2, q3, q4), 2 ->
-                let nwPnt, swPnt, nePnt, sePnt = QuadTreeMatrix<'t>.Restruct point (1, 1) (0, 1) (1, 0) (0, 0)
+                let nwPnt, swPnt, nePnt, sePnt = QuadTreeMatrix<'t>.deconstruct point (1, 1) (0, 1) (1, 0) (0, 0)
 
                 _go q1 nwPnt (size / 2); _go q2 nePnt (size / 2); _go q3 swPnt (size / 2); _go q4 sePnt (size / 2)
             | Node (q1, q2, q3, q4), _ ->
                 let nwPnt, swPnt, nePnt, sePnt =
-                    QuadTreeMatrix<'t>.Restruct
+                    QuadTreeMatrix<'t>.deconstruct
                         point
                         (size / 4, size / 4)
                         (size / 4, size / 4)
@@ -129,7 +133,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
         SparseMatrix(tree.numOfRows, tree.numOfCols, List.ofSeq outputHash)
 
-    static member private AdditionToNeedSize x iter =
+    static member private additionToNeedSize x iter =
         if x = None
         then x
         else
@@ -139,7 +143,7 @@ type QuadTreeMatrix<'t when 't : equality> =
                 | _ -> _go (Node(x, None, None, None)) (cnt - 1)
             _go x iter
 
-    static member private Reduce x iter =
+    static member private reduce x iter =
         let rec _go x size =
             match x, size with
             | None, _ -> None
@@ -151,82 +155,7 @@ type QuadTreeMatrix<'t when 't : equality> =
             | _, _ -> failwith "cannot reduce this"
         _go x iter
 
-    static member Multiply group (tree: QuadTreeMatrix<'t>) (tree1: QuadTreeMatrix<'t>) =
-        if tree.numOfCols <> tree1.numOfRows
-        then failwith "cannot multiply because of different sizes"
-        else
-            let mutable flag = false
-
-            let redefTree, redefTree1 =
-                if getPowOfTwo tree.numOfCols > (max (getPowOfTwo tree.numOfRows) (getPowOfTwo tree1.numOfCols))
-                then
-                    let maxsize = getPowOfTwo tree.numOfCols
-
-                    flag <- true
-
-                    QuadTreeMatrix(maxsize, maxsize, tree.tree),
-
-                    QuadTreeMatrix(maxsize, maxsize, tree1.tree)
-                elif tree.numOfRows > tree1.numOfCols
-                then 
-                    let maxSize = getPowOfTwo tree.numOfRows
-
-                    let difference = Math.Log2 ((maxSize / max (getPowOfTwo tree1.numOfCols) (getPowOfTwo tree1.numOfRows)) |> float) |> int
-
-                    QuadTreeMatrix(maxSize, maxSize, tree.tree),
-
-                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree1.tree difference)
-                else
-                    let maxSize = getPowOfTwo tree1.numOfCols
-
-                    let difference = Math.Log2 ((maxSize / max (getPowOfTwo tree.numOfRows) (getPowOfTwo tree.numOfCols)) |> float) |> int
-
-                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree.tree difference),
-
-                    QuadTreeMatrix(maxSize, maxSize, tree1.tree)
-            
-            let neutral, operation =
-                match group with
-                | Monoid _ -> failwith "monoid cannot be in multiply"
-                | SemiRing x -> x.monoid.neutral, x.mul
-
-            let rec _go x y currSize =
-                match x, y with
-                | Leaf t, Leaf k ->
-                    let current = operation t k
-
-                    if neutral = current then None else Leaf current
-                | None, _ | _, None -> None
-                | Node (q, q1, q2, q3), Node (qu, qu1, qu2, qu3) ->
-                    let sum firstTree secondTree =
-                        QuadTreeMatrix<'t>.Sum
-                            group
-                            (QuadTreeMatrix<'t>(currSize, currSize, firstTree))
-                            (QuadTreeMatrix<'t>(currSize, currSize, secondTree))
-
-                    let size = currSize / 2
-
-                    let first = sum (_go q qu size) (_go q1 qu2 size) 
-
-                    let second = sum (_go q qu1 size) (_go q1 qu3 size) 
-
-                    let third = sum (_go q2 qu size) (_go q3 qu2 size) 
-
-                    let fourth = sum (_go q2 qu1 size) (_go q3 qu3 size) 
-
-                    QuadTreeMatrix<'t>.MatchTrees first.tree second.tree third.tree fourth.tree
-                | _, _ -> failwith "cannot be in this case"
-
-            let semiAnswer = _go redefTree.tree redefTree1.tree redefTree.numOfCols
-
-            if flag
-            then
-                let dif = Math.Log2 ((getPowOfTwo tree.numOfCols) / (getPowOfTwo (max tree.numOfRows tree1.numOfCols)) |> float) |> int
-
-                QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, QuadTreeMatrix<_>.Reduce semiAnswer dif)
-            else QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, semiAnswer)
-
-    static member ParallelMultiply group (tree: QuadTreeMatrix<'t>) (tree1: QuadTreeMatrix<'t>) =
+    static member multiply group (tree: QuadTreeMatrix<'t>) (tree1: QuadTreeMatrix<'t>) =
         // made it a constant because I don't want to pass it as a function parameter
         let maxDeepness = 2
         if tree.numOfCols <> tree1.numOfRows
@@ -252,13 +181,13 @@ type QuadTreeMatrix<'t when 't : equality> =
 
                     QuadTreeMatrix(maxSize, maxSize, tree.tree),
 
-                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree1.tree difference)
+                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.additionToNeedSize tree1.tree difference)
                 else
                     let maxSize = getPowOfTwo tree1.numOfCols
 
                     let difference = Math.Log2 ((maxSize / max (getPowOfTwo tree.numOfRows) (getPowOfTwo tree.numOfCols)) |> float) |> int
 
-                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree.tree difference),
+                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.additionToNeedSize tree.tree difference),
 
                     QuadTreeMatrix(maxSize, maxSize, tree1.tree)
             
@@ -276,7 +205,7 @@ type QuadTreeMatrix<'t when 't : equality> =
                 | None, _ | _, None -> None
                 | Node (q, q1, q2, q3), Node (qu, qu1, qu2, qu3) ->
                     let sum firstTree secondTree =
-                        QuadTreeMatrix<'t>.Sum
+                        QuadTreeMatrix<'t>.sum
                             group
                             (QuadTreeMatrix<'t>(currSize, currSize, firstTree))
                             (QuadTreeMatrix<'t>(currSize, currSize, secondTree))
@@ -295,7 +224,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
                         let res = [first; second; third; fourth] |> Async.Parallel |> Async.RunSynchronously
                         
-                        QuadTreeMatrix<'t>.MatchTrees res.[0].tree res.[1].tree res.[2].tree res.[3].tree
+                        QuadTreeMatrix<'t>.matchTrees res.[0].tree res.[1].tree res.[2].tree res.[3].tree
                     else
                         let first = sum (_go q qu size counterOfDeepness) (_go q1 qu2 size counterOfDeepness) 
 
@@ -305,7 +234,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
                         let fourth = sum (_go q2 qu1 size counterOfDeepness) (_go q3 qu3 size counterOfDeepness) 
 
-                        QuadTreeMatrix<'t>.MatchTrees first.tree second.tree third.tree fourth.tree
+                        QuadTreeMatrix<'t>.matchTrees first.tree second.tree third.tree fourth.tree
                 | _, _ -> failwith "cannot be in this case"
 
             let semiAnswer = _go redefTree.tree redefTree1.tree redefTree.numOfCols 0 
@@ -314,10 +243,10 @@ type QuadTreeMatrix<'t when 't : equality> =
             then
                 let dif = Math.Log2 ((getPowOfTwo tree.numOfCols) / (getPowOfTwo (max tree.numOfRows tree1.numOfCols)) |> float) |> int
 
-                QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, QuadTreeMatrix<_>.Reduce semiAnswer dif)
+                QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, QuadTreeMatrix<_>.reduce semiAnswer dif)
             else QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, semiAnswer)
 
-    static member MultiplyScalar group (scalar: 't) (x: QuadTreeMatrix<'t>) =
+    static member multiplyScalar group (scalar: 't) (x: QuadTreeMatrix<'t>) =
         let neutral, operation =
             match group with
             | Monoid x -> x.neutral, x.sum
@@ -334,10 +263,10 @@ type QuadTreeMatrix<'t when 't : equality> =
 
             QuadTreeMatrix(x.numOfRows, x.numOfCols, _go x.tree)
 
-    static member TensorMultiply group (m1:QuadTreeMatrix<'t>) (m2:QuadTreeMatrix<'t>) =
+    static member tensorMul group (m1:QuadTreeMatrix<'t>) (m2:QuadTreeMatrix<'t>) =
         let rec go m1 =
             match m1 with
-            | Leaf x -> (QuadTreeMatrix<'t>.MultiplyScalar group x m2).tree
+            | Leaf x -> (QuadTreeMatrix<'t>.multiplyScalar group x m2).tree
             | None -> None
             | Node(nw, ne, se, sw) ->
                 let nw = go nw
@@ -348,7 +277,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
                 let sw = go sw
 
-                QuadTreeMatrix<_>.MatchTrees nw ne se sw
+                QuadTreeMatrix<_>.matchTrees nw ne se sw
 
         let t =
             match m1.tree, m2.tree with
@@ -357,7 +286,7 @@ type QuadTreeMatrix<'t when 't : equality> =
 
         QuadTreeMatrix(getPowOfTwo m1.numOfRows * getPowOfTwo m2.numOfRows, getPowOfTwo m1.numOfCols * getPowOfTwo m2.numOfCols, t)
 
-    static member Create (this: SparseMatrix<'t>) =
+    static member create (this: SparseMatrix<'t>) =
         let x =
             let max = getPowOfTwo (max this.numOfRows this.numOfCols)
 
@@ -387,14 +316,14 @@ type QuadTreeMatrix<'t when 't : equality> =
         let rec _go (point: Pair) (matrix: SparseMatrix<'t>) =
             match matrix.numOfCols, matrix.notEmptyData with
             | 1, _ ->
-                if matrix.notEmptyData.IsEmpty
+                if matrix.notEmptyData = []
                 then None
                 else Leaf matrix.notEmptyData.[0].data
             | _, k when k.Length <> 0 ->
                 let size = matrix.numOfCols
 
                 let nwPnt, swPnt, nePnt, sePnt =
-                    QuadTreeMatrix<'t>.Restruct
+                    QuadTreeMatrix<'t>.deconstruct
                         point
                         (size / 4, size / 4)
                         (size / 4, size / 4)

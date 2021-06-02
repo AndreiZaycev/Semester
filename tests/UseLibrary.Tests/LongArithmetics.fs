@@ -1,6 +1,9 @@
 module LongArithmetic
+
 open Expecto
+
 open BigAriphmetics
+
 open Listik
 
 let template valuesTest operator (operator1: BigInt -> BigInt -> BigInt) name =
@@ -14,8 +17,8 @@ let template valuesTest operator (operator1: BigInt -> BigInt -> BigInt) name =
                let secondInt = fold (fun acc elem -> string elem + acc) "" (rev second.digits) |> int
                if secondInt <> 0 then
                    Expect.equal
-                       (operator (firstInt * first.Sign) (secondInt * second.Sign))
-                       ((operator1 first second).Sign * (fold (fun acc elem -> string elem + acc) "" (rev (operator1 first second).digits) |> int))
+                       (operator (firstInt * first.sign) (secondInt * second.sign))
+                       ((operator1 first second).sign * (fold (fun acc elem -> string elem + acc) "" (rev (operator1 first second).digits) |> int))
                        "equals"
 
 [<Tests>]
