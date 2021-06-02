@@ -1,13 +1,8 @@
 module Quads
-
 open AlgebraicStruct
-
 open SparseMatrix
-
 open bMatrix
-
 open test
-
 open Expecto
 
 // генерирует кортеж из int[,] и ее расширенной матрицы
@@ -94,8 +89,8 @@ let treesOperations =
                 if k > 0 && abs k < 6
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    let y = (QuadTreeMatrix.create (QuadTreeMatrix.toMatrix (QuadTreeMatrix.create (snd x))))
-                    let z = QuadTreeMatrix.create (snd x)
+                    let y = (QuadTreeMatrix.Create (QuadTreeMatrix.ToMatrix (QuadTreeMatrix.Create (snd x))))
+                    let z = QuadTreeMatrix.Create (snd x)
                     Expect.equal y z "needs to be equal"
 
             testProperty "tensor mult on matrix and on trees id №2"
@@ -104,7 +99,24 @@ let treesOperations =
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
                     let y = generator (pown 2 (abs k)) (pown 2 (abs k))   
-                    Expect.equal (QuadTreeMatrix.create (createEM (tensor (fst x) (fst y)))) (QuadTreeMatrix.tensorMul group (QuadTreeMatrix.create (snd x)) (QuadTreeMatrix.create (snd y))) "needs to be equal"
+                    Expect.equal (QuadTreeMatrix.Create (createEM (tensor (fst x) (fst y)))) (QuadTreeMatrix.TensorMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y))) "needs to be equal"
+
+            testProperty "standart mult matrix and on trees id1"
+            <| fun (k: int, t: int, p: int) ->
+                if k <> 0 && abs k < 32 && t <> 0 && abs t < 32 && p <> 0 && abs p < 32
+                then
+                    let x = generator (abs t) (abs k)
+                    let y = generator (abs k) (abs p)
+                    let output = Array2D.zeroCreate (abs t) (abs p)
+                    let fTree =
+                        QuadTreeMatrix.ToMatrix
+                            (QuadTreeMatrix.ParallelMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y)))
+
+                    for i in fTree.notEmptyData do
+                        output.[int i.coordinates.x, int i.coordinates.y] <- i.data
+                        
+                    let sTree = m (fst x) (fst y)
+                    Expect.equal output sTree "needs to be equal"
 
             testProperty "standart mult matrix and on trees id"
             <| fun (k: int, t: int, p: int) ->
@@ -114,8 +126,8 @@ let treesOperations =
                     let y = generator (abs k) (abs p)
                     let output = Array2D.zeroCreate (abs t) (abs p)
                     let fTree =
-                        QuadTreeMatrix.toMatrix
-                            (QuadTreeMatrix.multiply group (QuadTreeMatrix.create (snd x)) (QuadTreeMatrix.create (snd y)))
+                        QuadTreeMatrix.ToMatrix
+                            (QuadTreeMatrix.Multiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y)))
 
                     for i in fTree.notEmptyData do
                         output.[int i.coordinates.x, int i.coordinates.y] <- i.data
@@ -123,12 +135,14 @@ let treesOperations =
                     let sTree = m (fst x) (fst y)
                     Expect.equal output sTree "needs to be equal"
 
+
+
             testProperty "standart mult matrix by scalar and on trees id"
             <| fun (k: int, scalar: int) ->
                 if k <> 0 && abs k < 7
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    Expect.equal (QuadTreeMatrix.create (createEM (multiplyByScalar scalar (fst x)))) (QuadTreeMatrix.multiplyScalar group scalar (QuadTreeMatrix.create (snd x))) "id"
+                    Expect.equal (QuadTreeMatrix.Create (createEM (multiplyByScalar scalar (fst x)))) (QuadTreeMatrix.MultiplyScalar group scalar (QuadTreeMatrix.Create (snd x))) "id"
 
             testProperty "standart sum matrix and on trees id"
             <| fun (k: int) ->
@@ -136,6 +150,6 @@ let treesOperations =
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
                     let y = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    Expect.equal (QuadTreeMatrix.create (createEM (sumMtx (fst x) (fst y)))) (QuadTreeMatrix.sum group (QuadTreeMatrix.create (snd x)) (QuadTreeMatrix.create (snd y))) "needs to be equal"
+                    Expect.equal (QuadTreeMatrix.Create (createEM (sumMtx (fst x) (fst y)))) (QuadTreeMatrix.Sum group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y))) "needs to be equal"
         ]
 

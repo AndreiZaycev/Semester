@@ -1,21 +1,19 @@
 module BigAriphmetics
-
 open System
-
 open Listik
 
-type sign =
+type Sign =
     | Positive 
     | Negative 
 
 let private detect x = if x = 1 then Positive elif x = -1 then Negative else failwith "wrong sign"
 
 type BigInt =
-    val signOfNumber: sign
+    val signOfNumber: Sign
     val digits: MyList<int>
     new ((k: int), p) = {signOfNumber = (detect k); digits = p}
-    member this.sign = if this.signOfNumber = Positive then 1 else -1
-    static member convertString (str: string) =
+    member this.Sign = if this.signOfNumber = Positive then 1 else -1
+    static member ConvertString (str: string) =
         let y = str.Trim()
         if y.Length = 0
         then failwith "input not empty data!"
@@ -29,12 +27,12 @@ type BigInt =
                 | 0 -> acc 
                 | _ -> _go (Cons((string x.[0]) |> int |> abs, acc)) x.[1..(x.Length - 1)]
             BigInt(sgn, (rev (_go (One 0) x)) |> tail)
-    static member convertStringToNegative (y: string) =
-        BigInt(-1, (BigInt.convertString y).digits)
+    static member ConvertStringToNegative (y: string) =
+        BigInt(-1, (BigInt.ConvertString y).digits)
 
 let toInt (data: BigInt) =
     let x = fold (fun acc elem -> acc + string elem) "" data.digits |> int
-    if data.sign = 1
+    if data.Sign = 1
     then x
     else -x
         
@@ -75,9 +73,9 @@ let private deleteZeroes x = // удаляет нули незначащие
 
 let private equalizeLength (x: BigInt) (y: BigInt) =
     if length x.digits > length y.digits
-    then x, BigInt (y.sign, addZeroBeginning y.digits (length x.digits - length y.digits + 1))
+    then x, BigInt (y.Sign, addZeroBeginning y.digits (length x.digits - length y.digits + 1))
     elif length x.digits < length y.digits
-    then BigInt (x.sign, addZeroBeginning x.digits (length y.digits - length x.digits + 1)), y
+    then BigInt (x.Sign, addZeroBeginning x.digits (length y.digits - length x.digits + 1)), y
     else x, y
 
 let transferDigits x =
@@ -97,13 +95,13 @@ let transferDigits x =
 let sum (x: BigInt) (y: BigInt) =
     // если знаки равны просто складываем, если нет то находим большее по модулю и однозначно знаем откуда вычитать
     let fList, sList = equalizeLength x y 
-    if fList.sign = sList.sign
-    then BigInt (fList.sign, transferDigits (map2 (+) fList.digits sList.digits))
+    if fList.Sign = sList.Sign
+    then BigInt (fList.Sign, transferDigits (map2 (+) fList.digits sList.digits))
     elif compareNumbers fList.digits sList.digits  
-    then BigInt (fList.sign, transferDigits (map2 (-) fList.digits sList.digits))
-    else BigInt (sList.sign, transferDigits (map2 (-) sList.digits fList.digits))
+    then BigInt (fList.Sign, transferDigits (map2 (-) fList.digits sList.digits))
+    else BigInt (sList.Sign, transferDigits (map2 (-) sList.digits fList.digits))
 
-let sub (x: BigInt) (y: BigInt) = sum x (BigInt (y.sign * -1, y.digits)) 
+let sub (x: BigInt) (y: BigInt) = sum x (BigInt (y.Sign * -1, y.digits)) 
 
 let multiply (x: BigInt) (y: BigInt) =
     // я придумал обходилку эксепшона с вызовом хвоста у единичного листа, везде юзаю special tail
@@ -124,7 +122,7 @@ let multiply (x: BigInt) (y: BigInt) =
                     acc)
             (initPosInt fIter)
             (tailOrZero sList)
-    BigInt (x.sign * y.sign, deleteZeroes output.digits)
+    BigInt (x.Sign * y.Sign, deleteZeroes output.digits)
 
 // умножалка по модулю
 let private absMul x y = (multiply (BigInt (1, x)) (BigInt (1, y))).digits
@@ -156,11 +154,11 @@ let divAndRem (x: BigInt) (y: BigInt) =
 let absolute (x:BigInt) = BigInt(1, x.digits)
 
 let division (x: BigInt) (y: BigInt) =
-    BigInt (x.sign * y.sign, divAndRem x y |> fst)
+    BigInt (x.Sign * y.Sign, divAndRem x y |> fst)
 
 let remDiv (x: BigInt) (y: BigInt) =
     let semiAns = BigInt (1, divAndRem x y |> snd)
-    match x.sign, y.sign with
+    match x.Sign, y.Sign with
     | -1, 1 -> sub y semiAns
     | 1, -1 -> semiAns
     | -1, -1 -> sub (absolute y) semiAns
@@ -174,7 +172,7 @@ let power (x: BigInt) (pow: BigInt) =
         | One 1 -> r
         | _ -> _go (multiply r x) (sub p (BigInt(1, One 1)))
 
-    if pow.sign = -1 then failwith "Positive power expected"
+    if pow.Sign = -1 then failwith "Positive power expected"
     else _go x pow
 
 let toBinary (x: BigInt) =
@@ -187,4 +185,4 @@ let toBinary (x: BigInt) =
 
     let divd, rem = divAndRem (BigInt(1, x.digits)) (BigInt(1, One 2))
 
-    BigInt(x.sign, _go divd rem)
+    BigInt(x.Sign, _go divd rem)

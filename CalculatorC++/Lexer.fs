@@ -163,7 +163,7 @@ and tokenStream  lexbuf =
           )
   | 16 -> ( 
 # 37 "Lexer.fsl"
-                          CalcParser.NUM (BigAriphmetics.BigInt.convertString (LexBuffer<_>.LexemeString lexbuf)) 
+                          CalcParser.NUM (BigAriphmetics.BigInt.ConvertString (LexBuffer<_>.LexemeString lexbuf)) 
 # 167 "Lexer.fs"
           )
   | 17 -> ( 
