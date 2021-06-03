@@ -7,7 +7,6 @@
     </PropertyGroup>
     <ItemGroup>
         <Content Include="test.txt" />
-        <Compile Include="TestsForGena.fs" />
         <Compile Include="Quads.fs" />
         <Compile Include="LongArithmetics.fs" />
         <Compile Include="AssemblyInfo.fs" />

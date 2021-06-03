@@ -16,13 +16,11 @@
     
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Generator.fs" />
     <Compile Include="AlgebraicStruct.fs" />
     <Compile Include="SparseMatrix.fs" />
     <Compile Include="BigAriphmetics.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <None Include="App.config" />
-    <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\tests\BoolMatrixForTest.Tests\BoolMrtxTest.fsproj" />
