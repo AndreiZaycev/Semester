@@ -38,7 +38,6 @@ let generatorOneValue k i value =
             counter <- counter + 1
     SparseMatrix(k, i, List.ofArray arr)
 
-
 let sumMtx o (t: int[,]) =
     for i in 0 .. Array2D.length1 o - 1 do
         for j in 0 .. Array2D.length2 o - 1 do

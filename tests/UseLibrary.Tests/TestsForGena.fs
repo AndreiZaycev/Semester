@@ -2,7 +2,6 @@ module TestsForGena
 open Generator
 open Expecto
 
-
 let readGeneratedMatrix file =
     let readLines = System.IO.File.ReadAllLines(file)
     let outputMtx = Array2D.zeroCreate readLines.Length (readLines.[0].Split(" ").Length - 1)

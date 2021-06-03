@@ -3,7 +3,6 @@ open System.IO
 open Generator
 open Argu
 
-
 type CliArguments =
     | Rows of rows: int
     | Cols of cols: int
