@@ -101,6 +101,23 @@ let treesOperations =
                     let y = generator (pown 2 (abs k)) (pown 2 (abs k))   
                     Expect.equal (QuadTreeMatrix.Create (createEM (tensor (fst x) (fst y)))) (QuadTreeMatrix.TensorMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y))) "needs to be equal"
 
+            testProperty "standart mult matrix and on trees id1"
+            <| fun (k: int, t: int, p: int) ->
+                if k <> 0 && abs k < 32 && t <> 0 && abs t < 32 && p <> 0 && abs p < 32
+                then
+                    let x = generator (abs t) (abs k)
+                    let y = generator (abs k) (abs p)
+                    let output = Array2D.zeroCreate (abs t) (abs p)
+                    let fTree =
+                        QuadTreeMatrix.ToMatrix
+                            (QuadTreeMatrix.ParallelMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y)))
+
+                    for i in fTree.notEmptyData do
+                        output.[int i.coordinates.x, int i.coordinates.y] <- i.data
+                        
+                    let sTree = m (fst x) (fst y)
+                    Expect.equal output sTree "needs to be equal"
+
             testProperty "standart mult matrix and on trees id"
             <| fun (k: int, t: int, p: int) ->
                 if k <> 0 && abs k < 32 && t <> 0 && abs t < 32 && p <> 0 && abs p < 32

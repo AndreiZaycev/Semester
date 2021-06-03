@@ -226,6 +226,97 @@ type QuadTreeMatrix<'t when 't : equality> =
                 QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, QuadTreeMatrix<_>.Reduce semiAnswer dif)
             else QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, semiAnswer)
 
+    static member ParallelMultiply group (tree: QuadTreeMatrix<'t>) (tree1: QuadTreeMatrix<'t>) =
+        // made it a constant because I don't want to pass it as a function parameter
+        let maxDeepness = 2
+        if tree.numOfCols <> tree1.numOfRows
+        then failwith "cannot multiply because of different sizes"
+        else
+            let mutable flag = false
+
+            let redefTree, redefTree1 =
+                if getPowOfTwo tree.numOfCols > (max (getPowOfTwo tree.numOfRows) (getPowOfTwo tree1.numOfCols))
+                then
+                    let maxsize = getPowOfTwo tree.numOfCols
+
+                    flag <- true
+
+                    QuadTreeMatrix(maxsize, maxsize, tree.tree),
+
+                    QuadTreeMatrix(maxsize, maxsize, tree1.tree)
+                elif tree.numOfRows > tree1.numOfCols
+                then 
+                    let maxSize = getPowOfTwo tree.numOfRows
+
+                    let difference = Math.Log2 ((maxSize / max (getPowOfTwo tree1.numOfCols) (getPowOfTwo tree1.numOfRows)) |> float) |> int
+
+                    QuadTreeMatrix(maxSize, maxSize, tree.tree),
+
+                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree1.tree difference)
+                else
+                    let maxSize = getPowOfTwo tree1.numOfCols
+
+                    let difference = Math.Log2 ((maxSize / max (getPowOfTwo tree.numOfRows) (getPowOfTwo tree.numOfCols)) |> float) |> int
+
+                    QuadTreeMatrix(maxSize, maxSize, QuadTreeMatrix<_>.AdditionToNeedSize tree.tree difference),
+
+                    QuadTreeMatrix(maxSize, maxSize, tree1.tree)
+            
+            let neutral, operation =
+                match group with
+                | Monoid _ -> failwith "monoid cannot be in multiply"
+                | SemiRing x -> x.monoid.neutral, x.mul
+
+            let rec _go x y currSize counterOfDeepness =
+                match x, y with
+                | Leaf t, Leaf k ->
+                    let current = operation t k
+
+                    if neutral = current then None else Leaf current
+                | None, _ | _, None -> None
+                | Node (q, q1, q2, q3), Node (qu, qu1, qu2, qu3) ->
+                    let sum firstTree secondTree =
+                        QuadTreeMatrix<'t>.Sum
+                            group
+                            (QuadTreeMatrix<'t>(currSize, currSize, firstTree))
+                            (QuadTreeMatrix<'t>(currSize, currSize, secondTree))
+
+                    let size = currSize / 2
+
+                    if counterOfDeepness < maxDeepness
+                    then
+                        let first = async { return  sum (_go q qu size (counterOfDeepness + 1)) (_go q1 qu2 size (counterOfDeepness + 1)) }
+
+                        let second = async { return sum (_go q qu1 size (counterOfDeepness + 1)) (_go q1 qu3 size (counterOfDeepness + 1)) }
+
+                        let third = async { return sum (_go q2 qu size (counterOfDeepness + 1)) (_go q3 qu2 size (counterOfDeepness + 1)) } 
+
+                        let fourth = async { return  sum (_go q2 qu1 size (counterOfDeepness + 1)) (_go q3 qu3 size (counterOfDeepness + 1)) }
+
+                        let res = [first; second; third; fourth] |> Async.Parallel |> Async.RunSynchronously
+                        
+                        QuadTreeMatrix<'t>.MatchTrees res.[0].tree res.[1].tree res.[2].tree res.[3].tree
+                    else
+                        let first = sum (_go q qu size counterOfDeepness) (_go q1 qu2 size counterOfDeepness) 
+
+                        let second = sum (_go q qu1 size counterOfDeepness) (_go q1 qu3 size counterOfDeepness) 
+
+                        let third = sum (_go q2 qu size counterOfDeepness) (_go q3 qu2 size counterOfDeepness) 
+
+                        let fourth = sum (_go q2 qu1 size counterOfDeepness) (_go q3 qu3 size counterOfDeepness) 
+
+                        QuadTreeMatrix<'t>.MatchTrees first.tree second.tree third.tree fourth.tree
+                | _, _ -> failwith "cannot be in this case"
+
+            let semiAnswer = _go redefTree.tree redefTree1.tree redefTree.numOfCols 0 
+
+            if flag
+            then
+                let dif = Math.Log2 ((getPowOfTwo tree.numOfCols) / (getPowOfTwo (max tree.numOfRows tree1.numOfCols)) |> float) |> int
+
+                QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, QuadTreeMatrix<_>.Reduce semiAnswer dif)
+            else QuadTreeMatrix(tree.numOfRows, tree1.numOfCols, semiAnswer)
+
     static member MultiplyScalar group (scalar: 't) (x: QuadTreeMatrix<'t>) =
         let neutral, operation =
             match group with

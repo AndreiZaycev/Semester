@@ -7,12 +7,12 @@
     </PropertyGroup>
     <ItemGroup>
         <Content Include="test.txt" />
+        <Compile Include="TestsForGena.fs" />
         <Compile Include="Quads.fs" />
         <Compile Include="LongArithmetics.fs" />
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
-    <ItemGroup />
     <ItemGroup>
       <PackageReference Include="Expecto.FsCheck" Version="8.13.1" />
     </ItemGroup>
