@@ -26,6 +26,7 @@ using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using Avalonia.Threading;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace AvaloniaEditDemo.Views
 {
@@ -88,6 +89,7 @@ namespace AvaloniaEditDemo.Views
                 }
             }
             _stackPanel.Children.Add(but);
+            
             using (StreamReader s =
             new StreamReader(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/highlighter.xshd"))
             {
@@ -98,7 +100,7 @@ namespace AvaloniaEditDemo.Views
                     reader,
                     HighlightingManager.Instance);
                 }
-            }
+            } 
         }
 
         private void InitializeComponent()
@@ -119,7 +121,7 @@ namespace AvaloniaEditDemo.Views
             var cnt = 0;
             foreach (Button button in _stackPanel.Children)
             {               
-                if (button.Background == Brush.Parse("Purple"))
+                if (button.Background == Brush.Parse("Purple") || button.Background == Brush.Parse("Red"))
                 {
                     if (cnt == counterOfBreakpoint)
                     {
@@ -138,32 +140,56 @@ namespace AvaloniaEditDemo.Views
             {
                 try
                 {
+                    Button lastBut = new Button();
+                    foreach (Button buts in _stackPanel.Children)
+                    {
+                        if (buts.Background == Brush.Parse("Purple") || buts.Background == Brush.Parse("Red"))
+                        {
+                            lastBut = buts;
+                        }
+                    }
+                    if (lastBut.Background == Brush.Parse("Red"))
+                    {
+                        lastBut.Background = Brush.Parse("Purple");
+                    }
                     string text = _textEditor.Text;
                     var parsed = Arithm.Main.parse(text);
-                    var task = new Task<Queue<string>>(() =>
+                    var task = new Task<Dictionary<string, string>>(() =>
                         {
-                            Queue<string> _que = new Queue<string>();
-                            var dict = Arithm.Interpreter.run(parsed);
-                            foreach (var keys in dict.Item3.Values)
+                            try
                             {
-                                _que.Enqueue(keys);
+                                var dict = Arithm.Interpreter.run(parsed);
+                                return dict.Item3;                          
                             }
-                            return _que;
+                            catch (Exception)
+                            {
+                                return null;
+                            }
                         }
                     );
                     task.ContinueWith(t =>
                         Dispatcher.UIThread.Post(() =>
                         {
-                            _console.Text = "";
-                            foreach (var queres in t.Result)
+                            if (t.Result == null)
                             {
-                                _console.Text += $"{queres}\r\n";
+                                _console.Text = "Parse error";
+                                _executionStatus.Background = Brushes.Red;
+                                _runButton.IsEnabled = true;
+                                isSuccessfulRun = false;
                             }
-                            if (isSuccessfulRun)
+                            else
                             {
-                                _executionStatus.Background = Brushes.Green;
+                                _console.Text = "";
+                                foreach (var queres in t.Result.Values)
+                                {
+                                    _console.Text += $"{queres}\r\n";
+                                }
+                                if (isSuccessfulRun)
+                                {
+                                    _executionStatus.Background = Brushes.Green;
+                                }
+                                _console.Text += "Execution finished.";
                             }
-                            _console.Text += "Execution finished.";
                         }));
                     task.Start();
                 }
@@ -181,36 +207,70 @@ namespace AvaloniaEditDemo.Views
                 {             
                     string textToExecute = "";
                     string[] lines = _textEditor.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                    var countOfExecutedButtons = 0;
+                    Button redButty = new Button();
+                    foreach (Button buttons in _stackPanel.Children)
+                    {
+                        if (buttons.Background == Brush.Parse("Red"))
+                        {
+                            buttons.Background = Brush.Parse("Purple");
+                        }
+                        if (countOfExecutedButtons == line)
+                        {
+                            buttons.Background = Brush.Parse("Red");
+                            redButty = buttons;
+                            break;
+                        }
+                        else
+                        {
+                            countOfExecutedButtons++;
+                        }
+                    }
                     for (var counter = 0; counter < line; counter++)
                     {
                         textToExecute += lines[counter] + " ";
                     }
-                    var Parsed = Arithm.Main.parse(textToExecute);
+                    var parsed = Arithm.Main.parse(textToExecute);
                     var task = new Task<Queue<(string, string)>>(() =>
                         {
-                            var _que = new Queue<(string, string)>();
-                            var dict = Arithm.Interpreter.run(Parsed).Item2;
-                            foreach (var keys in dict.Keys)
+                            try
                             {
-                                _que.Enqueue((keys[^2..].Replace("\"", ""), dict[keys]));
+                                var _que = new Queue<(string, string)>();
+                                var dict = Arithm.Interpreter.run(parsed).Item2;
+                                foreach (var keys in dict.Keys)
+                                {
+                                    _que.Enqueue((keys[^2..].Replace("\"", ""), dict[keys]));
+                                }
+                                return _que;
                             }
-                            return _que;
+                            catch (Exception)
+                            {
+                                return null;
+                            }
                         });
                     task.ContinueWith(t =>
                         Dispatcher.UIThread.Post(() =>
                         {
-                            _console.Text = "";
-                            _runButton.IsEnabled = true;
-                            foreach ((string keys, string values) in t.Result)
+                            if (t.Result == null)
                             {
-                                _console.Text += $"{keys} = {values}\r\n";
+                                _console.Text = "Parse error";
+                                _executionStatus.Background = Brushes.Red;
+                                _runButton.IsEnabled = true;
+                                isSuccessfulRun = false;
                             }
-                            if (isSuccessfulRun)
+                            else
                             {
-                                _executionStatus.Background = Brushes.Green;
+                                _console.Text = "Local variables\n";
+                                _runButton.IsEnabled = true;
+                                foreach ((string keys, string values) in t.Result)
+                                {
+                                    _console.Text += $"{keys} = {values}\r\n";
+                                }
+                                if (isSuccessfulRun)
+                                {
+                                    _executionStatus.Background = Brushes.Green;
+                                }
                             }
-                            _console.Text += "Execution finished.";
-
                         }
                     ));
                     task.Start();
@@ -243,7 +303,7 @@ namespace AvaloniaEditDemo.Views
 
         public void _textEditor_TextChanged(object sender, EventArgs e)
         {           
-            var lines = _textEditor.LineCount; 
+            var lines = _textEditor.LineCount;
             int childrens = _stackPanel.Children.Count;
             if (childrens > lines)
             {
