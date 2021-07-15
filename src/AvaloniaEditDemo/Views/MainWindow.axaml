@@ -9,7 +9,7 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="AvaloniaEditDemo">
     <DockPanel>
-        <StackPanel Orientation="Horizontal"
+        <StackPanel Name="_stackPanel" Orientation="Horizontal"
                     DockPanel.Dock="Top"
                     Spacing="5"
                     Margin="3">
@@ -28,14 +28,12 @@
             <ScrollViewer Name="scrollViewer" VerticalScrollBarVisibility="Visible">
                 <Grid Grid.Row="0">
                     <Grid HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Visible">
-                        <Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
-                            <StackPanel Name="stackPanel" Background="Yellow">
-
-                            </StackPanel>
+                        <Border BorderBrush="Black" BorderThickness="3">
+                            <StackPanel Name="stackPanel" ClipToBounds="True" Background="Yellow"/>
                         </Border>
                     </Grid>
                     <Grid>
-                        <Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
+                        <Border BorderBrush="Black" BorderThickness="3">
                             <AvalonEdit:TextEditor
                                                     Name="Editor"
                                                     Background="Black"
@@ -64,7 +62,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Orthodox GUI"/>
+                        <TextBlock Name="executionStatus" Text="Console"/>
                         <TextBox AcceptsReturn="True" IsReadOnly="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Name="console" Grid.Row="2"/>
                     </Grid>
                 </Border>
