@@ -1,27 +1,20 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Platform;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Native;
-using Avalonia.Platform;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Highlighting;
-using AvaloniaEdit.Indentation;
 using AvaloniaEdit.Indentation.CSharp;
-using AvaloniaEdit.Rendering;
-using Arithm;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using Avalonia.Threading;
@@ -29,8 +22,6 @@ using System.Threading.Tasks;
 
 namespace AvaloniaEditDemo.Views
 {
-    using Pair = KeyValuePair<int, IControl>;
-
     public class MainWindow : Window
     {
         private readonly TextEditor _textEditor;
@@ -41,6 +32,8 @@ namespace AvaloniaEditDemo.Views
         private TextBox _console;
         private StackPanel _stackPanel;
         private ScrollViewer _scrollViewer;
+        private readonly TextBlock _executionStatus;
+        private bool isSuccessfulRun = true;
 
         public MainWindow()
         {
@@ -52,6 +45,8 @@ namespace AvaloniaEditDemo.Views
             _textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("C#");
             _textEditor.SyntaxHighlighting.MainRuleSet.Name = "print";
             _textEditor.TextArea.IndentationStrategy = new CSharpIndentationStrategy();
+
+            _executionStatus = this.FindControl<TextBlock>("executionStatus");
 
             _stackPanel = this.FindControl<StackPanel>("stackPanel");
 
@@ -67,10 +62,12 @@ namespace AvaloniaEditDemo.Views
             _createFileButton.Click += _createFileButton_Click;
 
             _openFileButton = this.FindControl<Button>("OpenFile");
-            _openFileButton.Click += _openControlBtn_Click; 
+            _openFileButton.Click += _openControlBtn_Click;
 
             _console = this.FindControl<TextBox>("console");
-            var but = new Button() { Height = 20, Margin = Thickness.Parse("0,0"), Width = 20, Background = Brush.Parse("Yellow") };
+            // ��� �������� 2, ������ ��� � ����� ������� ������-�� ������ ������ ����� ������ � 2 ������� ������ 
+            // ���������� �� ������
+            var but = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight + 2, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
             but.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
@@ -85,6 +82,7 @@ namespace AvaloniaEditDemo.Views
                 }
             }
             _stackPanel.Children.Add(but);
+            // syntax highlighting 
             using (StreamReader s =
             new StreamReader(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/highlighter.xshd"))
             {
@@ -97,110 +95,207 @@ namespace AvaloniaEditDemo.Views
                 }
             }
         }
-
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
         }
 
         int counterOfBreakpoint = 0;
-
-        public void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        string openedFile = null;
+        private void checkColorButton()
         {
-            _console.Text = "";
-            bool flag = false;
-            int line = 0;
-            var cnt = 0;
-            foreach (Button button in _stackPanel.Children)
-            {               
-                if (button.Background == Brush.Parse("Purple"))
+            Button lastBut = new Button();
+            foreach (Button buts in _stackPanel.Children)
+            {
+                if (buts.Background == Brush.Parse("Purple") || buts.Background == Brush.Parse("Red"))
                 {
-                    if (cnt == counterOfBreakpoint)
+                    lastBut = buts;
+                }
+            }
+            if (lastBut.Background == Brush.Parse("Red"))
+            {
+                lastBut.Background = Brush.Parse("Purple");
+            }
+        }
+        private Button drawRedBreakpoint(int line)
+        {
+            var numberOfExecutedButtons = 0;
+            Button redButty = new Button();
+            foreach (Button buttons in _stackPanel.Children)
+            {
+                if (buttons.Background == Brush.Parse("Red"))
+                {
+                    buttons.Background = Brush.Parse("Purple");
+                }
+                if (numberOfExecutedButtons == line)
+                {
+                    buttons.Background = Brush.Parse("Red");
+                    redButty = buttons;
+                    break;
+                }
+                else
+                {
+                    numberOfExecutedButtons++;
+                }
+            }
+            return redButty;
+        }
+        private void sendMessageToConsole(string exception)
+        {
+            _console.Text = exception;
+            _executionStatus.Background = Brushes.Red;
+            _runButton.IsEnabled = true;
+            isSuccessfulRun = false;
+        }
+        private (int, bool) findLineNewBreakpoint(bool hasBreakpoint)
+        {
+            var line = 0;
+            var numOfButton = 0;
+            foreach (Button button in _stackPanel.Children)
+            {
+                if (button.Background == Brush.Parse("Purple") || button.Background == Brush.Parse("Red"))
+                {
+                    if (numOfButton == counterOfBreakpoint)
                     {
-                        flag = true;
+                        hasBreakpoint = true;
                         counterOfBreakpoint++;
                         break;
                     }
                     else
                     {
-                        cnt++;
+                        numOfButton++;
                     }
                 }
-                line++;              
+                line++;
             }
-            if (!flag)
+            return (line, hasBreakpoint);
+        }
+        private void executeCodeWithPrintValues(string text)
+        {
+            var parsed = Arithm.Main.parse(text);
+            var task = new Task<Dictionary<string, string>>(() =>
             {
                 try
                 {
-                    string text = _textEditor.Text;
-                    var Parsed = Arithm.Main.parse(text);
-                    var task = new Task<Queue<string>>(() =>
-                        {
-                            Queue<string> _que = new Queue<string>();
-                            var dict = Arithm.Interpreter.run(Parsed).Item3;
-                            foreach (var keys in dict.Values)
-                            {
-                                _que.Enqueue(keys);
-                            }
-                            return _que;
-                        }
-                    );
-                    task.ContinueWith(t =>
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            _console.Text = String.Empty;
-                            foreach (var queres in t.Result)
-                            {
-                                _console.Text += queres + "\r\n";
-                            }
-                        }));
-                    task.Start();
+                    var dict = Arithm.Interpreter.run(parsed);
+                    return dict.Item3;
                 }
                 catch (Exception)
                 {
-                    _console.Text = "Syntax error";
+                    return null;
                 }
+            }
+             );
+            task.ContinueWith(t =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (t.Result == null)
+                    {
+                        sendMessageToConsole("Failed while parsing");
+                    }
+                    else
+                    {
+                        _console.Text = "";
+                        foreach (var values in t.Result.Values)
+                        {
+                            _console.Text += $"{values}{Environment.NewLine}";
+                        }
+                        if (isSuccessfulRun)
+                        {
+                            _executionStatus.Background = Brushes.Green;
+                        }
+                        _console.Text += "Execution finished.";
+                    }
+                }));
+            task.Start();
+        }
+        private void executeCodeWithBreakpoint(int line)
+        {
+            string textToExecute = "";
+            string[] lines = _textEditor.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var redButton = drawRedBreakpoint(line);
+            for (var counter = 0; counter < line; counter++)
+            {
+                textToExecute += lines[counter] + " ";
+            }
+            var parsed = Arithm.Main.parse(textToExecute);
+            var task = new Task<Dictionary<string, string>>(() =>
+            {
+                try
+                {
+                    return Arithm.Interpreter.run(parsed).Item2;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            });
+            task.ContinueWith(t =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (t.Result == null)
+                    {
+                        sendMessageToConsole("Failed while parsing");
+                    }
+                    else
+                    {
+                        _console.Text = $"Local variables{ Environment.NewLine }";
+                        _runButton.IsEnabled = true;
+                        foreach ((string keys, string values) in t.Result)
+                        {
+                            _console.Text += $"{keys[^2..].Replace("\"", "")} = {values}{ Environment.NewLine }";
+                        }
+                        if (isSuccessfulRun)
+                        {
+                            _executionStatus.Background = Brushes.Green;
+                        }
+                    }
+                }
+            ));
+            task.Start();
+        }
+        public void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (_textEditor.Text.Replace(" ", "").Replace($"{Environment.NewLine}", "") == "")
+            {
+                _executionStatus.Background = Brushes.Green;
+                _console.Text = "Execution finished.";
             }
             else
             {
-                try
+                _console.Text = "";
+                isSuccessfulRun = true;
+                _executionStatus.Background = Brushes.Yellow;
+                _console.Text = "Execution started.";
+                var hasBreakpoints = false;
+                var line = 0;
+                (line, hasBreakpoints) = findLineNewBreakpoint(hasBreakpoints);
+                if (!hasBreakpoints)
                 {
-                    string textToExecute = string.Empty;
-                    string[] lines = _textEditor.Text.Split("\r\n");
-                    for (var counter = 0; counter < line; counter++)
+                    try
                     {
-                        textToExecute += lines[counter];
+                        checkColorButton();
+                        string text = _textEditor.Text;
+                        executeCodeWithPrintValues(text);
                     }
-                    var Parsed = Arithm.Main.parse(textToExecute);
-                    var task = new Task<Queue<(string, string)>>(() =>
-                        {
-                            var _que = new Queue<(string, string)>();
-                            var dict = Arithm.Interpreter.run(Parsed).Item2;
-                            foreach (var keys in dict.Keys)
-                            {
-                                _que.Enqueue((keys[^2..].Replace("\"", string.Empty), dict[keys]));
-                            }
-                            return _que;
-                        });
-                    task.ContinueWith(t => 
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            _console.Text = String.Empty;
-                            foreach ((string keys, string values) in t.Result)
-                            {
-                                _console.Text += $"{keys} = {values}\r\n";
-                            }
-                        }                        
-                    ));
-                    task.Start();
-                }                                  
-                catch (Exception)
+                    catch (Exception exception)
+                    {
+                        sendMessageToConsole(exception.Message);
+                    }
+                }
+                else
                 {
-                    _console.Text = "Syntax error";
+                    try
+                    {
+                        executeCodeWithBreakpoint(line);
+                    }
+                    catch (Exception exception)
+                    {
+                        sendMessageToConsole(exception.Message);
+                    }
                 }
             }
         }
-
         async private void _openControlBtn_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -210,27 +305,52 @@ namespace AvaloniaEditDemo.Views
                 using (StreamReader sr = new StreamReader(path[0]))
                 {
                     string text = sr.ReadToEnd();
+                    openedFile = path[0];
                     _textEditor.Text = text;
                 }
             }
             catch (Exception)
             { }
         }
-
+        async private void _createFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            var path = await sfd.ShowAsync(this);
+            if (!File.Exists(path))
+            {
+                try
+                {
+                    File.CreateText(path);
+                }
+                catch (Exception)
+                { }
+            }
+        }
+        async private void _saveFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog sw = new SaveFileDialog();
+            string path = openedFile ?? await sw.ShowAsync(this);
+            try
+            {
+                System.IO.File.WriteAllText(path, _textEditor.Text);
+            }
+            catch (Exception)
+            { }
+        }
         public void _textEditor_TextChanged(object sender, EventArgs e)
-        {           
-            var lines = _textEditor.LineCount; 
+        {
+            var lines = _textEditor.LineCount;
             int childrens = _stackPanel.Children.Count;
             if (childrens > lines)
             {
-                _stackPanel.Children.RemoveRange(lines, childrens - lines);              
+                _stackPanel.Children.RemoveRange(lines, childrens - lines);
             }
             else if (childrens < lines)
             {
-                
+
                 for (var i = childrens; i < lines; i++)
                 {
-                    var button = new Button() { Height = 16.8, Width = 20, Background = Brush.Parse("Yellow"), Margin = Thickness.Parse("0,0") };
+                    var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Width = _stackPanel.Width, Background = Brush.Parse("Yellow"), Margin = Thickness.Parse("0,0") };
                     button.Click += breakPoint_Click;
                     void breakPoint_Click(object sender, RoutedEventArgs e)
                     {
@@ -247,8 +367,8 @@ namespace AvaloniaEditDemo.Views
                     var caretLine = _textEditor.TextArea.Caret.Line;
                     _stackPanel.Children.Add(button);
                 }
-            }          
-        } 
+            }
+        }
         private class MyOverloadProvider : IOverloadProvider
         {
             private readonly IList<(string header, string content)> _items;
@@ -285,7 +405,6 @@ namespace AvaloniaEditDemo.Views
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-
         public class MyCompletionData : ICompletionData
         {
             public MyCompletionData(string text)
@@ -309,67 +428,5 @@ namespace AvaloniaEditDemo.Views
                 textArea.Document.Replace(completionSegment, Text);
             }
         }
-
-        async private void _createFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog sfd = new SaveFileDialog();
-            var path = await sfd.ShowAsync(this);
-            if (!File.Exists(path))
-            {
-                try
-                {
-                    File.CreateText(path);
-
-                }
-                catch (Exception)
-                { }
-            }
-        }
-        async private void _saveFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog sw = new SaveFileDialog();
-            string path = await sw.ShowAsync(this);
-            try
-            {
-                System.IO.File.WriteAllText(path, _textEditor.Text);
-            }
-            catch (Exception)
-            { }
-        }
-
-        class ElementGenerator : VisualLineElementGenerator, IComparer<Pair>
-        {
-            public List<Pair> controls = new List<Pair>();
-
-            /// <summary>
-            /// Gets the first interested offset using binary search
-            /// </summary>
-            /// <returns>The first interested offset.</returns>
-            /// <param name="startOffset">Start offset.</param>
-            public override int GetFirstInterestedOffset(int startOffset)
-            {
-                int pos = controls.BinarySearch(new Pair(startOffset, null), this);
-                if (pos < 0)
-                    pos = ~pos;
-                if (pos < controls.Count)
-                    return controls[pos].Key;
-                else
-                    return -1;
-            }
-
-            public override VisualLineElement ConstructElement(int offset)
-            {
-                int pos = controls.BinarySearch(new Pair(offset, null), this);
-                if (pos >= 0)
-                    return new InlineObjectElement(0, controls[pos].Value);
-                else
-                    return null;
-            }
-
-            int IComparer<Pair>.Compare(Pair x, Pair y)
-            {
-                return x.Key.CompareTo(y.Key);
-            }
-        }
-    }         
+    }
 }

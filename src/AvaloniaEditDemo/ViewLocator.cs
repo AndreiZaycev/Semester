@@ -4,7 +4,6 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using AvaloniaEditDemo.ViewModels;
 
 namespace AvaloniaEditDemo
 {
@@ -29,7 +28,7 @@ namespace AvaloniaEditDemo
 
         public bool Match(object data)
         {
-            return data is ViewModelBase;
+            return false;
         }
     }
 }
