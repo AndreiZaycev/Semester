@@ -28,14 +28,12 @@
             <ScrollViewer Name="scrollViewer" VerticalScrollBarVisibility="Visible">
                 <Grid Grid.Row="0">
                     <Grid HorizontalAlignment="Left" ScrollViewer.VerticalScrollBarVisibility="Visible">
-                        <Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
-                            <StackPanel Name="stackPanel" Background="Yellow">
-
-                            </StackPanel>
+                        <Border BorderBrush="Black" BorderThickness="3">
+                            <StackPanel Name="stackPanel" ClipToBounds="True" Background="Yellow"/>
                         </Border>
                     </Grid>
                     <Grid>
-                        <Border BorderBrush="Black" BorderThickness="3" Grid.Column="0">
+                        <Border BorderBrush="Black" BorderThickness="3">
                             <AvalonEdit:TextEditor
                                                     Name="Editor"
                                                     Background="Black"
