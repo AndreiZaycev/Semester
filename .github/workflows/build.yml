@@ -4,32 +4,34 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        dotnet: [3.1.100]
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: ${{ matrix.dotnet }}
-    - name: Build
-      if: runner.os != 'Windows'
-      run: |
-        chmod +x ./build.sh
-        ./build.sh
-      env:
-        # Work around https://github.com/actions/setup-dotnet/issues/29
-        DOTNET_ROOT: ${{ runner.tool_cache }}/dncs/${{ matrix.dotnet }}/x64
-        CI: true
-    - name: Build
-      if: runner.os == 'Windows'
-      run: ./build.cmd
-      env:
-        # Work around https://github.com/actions/setup-dotnet/issues/29
-        DOTNET_ROOT: ${{ runner.tool_cache }}/dncs/${{ matrix.dotnet }}/x64
-        CI: true
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core 3.1	
+        uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: 3.1.x
+      - name: Setup .NET Core 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build on UNIX
+        if: runner.os != 'Windows'   
+        run: |
+          chmod +x ./build.sh
+          ./build.sh 
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI: true
+      - name: Build on Windows
+        if: runner.os == 'Windows'
+        run: ./build.cmd
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI: true
