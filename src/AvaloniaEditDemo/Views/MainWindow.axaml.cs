@@ -65,8 +65,8 @@ namespace AvaloniaEditDemo.Views
             _openFileButton.Click += _openControlBtn_Click;
 
             _console = this.FindControl<TextBox>("console");
-            // ��� �������� 2, ������ ��� � ����� ������� ������-�� ������ ������ ����� ������ � 2 ������� ������ 
-            // ���������� �� ������
+            // тут добавляю 2, потому что в текст эдиторе почему-то первая строка имеет пробел в 2 пикселя сверху 
+            // независимо от шрифта
             var but = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight + 2, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
             but.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
