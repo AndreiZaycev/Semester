@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -62,11 +62,11 @@ namespace AvaloniaEditDemo.Views
             _createFileButton.Click += _createFileButton_Click;
 
             _openFileButton = this.FindControl<Button>("OpenFile");
-            _openFileButton.Click += _openControlBtn_Click;
+            _openFileButton.Click += _openControlBtn_Click; 
 
             _console = this.FindControl<TextBox>("console");
-            // Ñ‚ÑƒÑ‚ Ð´Ð¾Ð±Ð°Ð²Ð»ÑÑŽ 2, Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ Ð² Ñ‚ÐµÐºÑÑ‚ ÑÐ´Ð¸Ñ‚Ð¾Ñ€Ðµ Ð¿Ð¾Ñ‡ÐµÐ¼Ñƒ-Ñ‚Ð¾ Ð¿ÐµÑ€Ð²Ð°Ñ ÑÑ‚Ñ€Ð¾ÐºÐ° Ð¸Ð¼ÐµÐµÑ‚ Ð¿Ñ€Ð¾Ð±ÐµÐ» Ð² 2 Ð¿Ð¸ÐºÑÐµÐ»Ñ ÑÐ²ÐµÑ€Ñ…Ñƒ 
-            // Ð½ÐµÐ·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ Ð¾Ñ‚ ÑˆÑ€Ð¸Ñ„Ñ‚Ð°
+            // òóò äîáàâëÿþ 2, ïîòîìó ÷òî â òåêñò ýäèòîðå ïî÷åìó-òî ïåðâàÿ ñòðîêà èìååò ïðîáåë â 2 ïèêñåëÿ ñâåðõó 
+            // íåçàâèñèìî îò øðèôòà
             var but = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight + 2, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
             but.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
@@ -93,7 +93,7 @@ namespace AvaloniaEditDemo.Views
                     reader,
                     HighlightingManager.Instance);
                 }
-            }
+            } 
         }
         private void InitializeComponent()
         {
@@ -256,7 +256,7 @@ namespace AvaloniaEditDemo.Views
         }
         public void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            if (_textEditor.Text.Replace(" ", "").Replace($"{Environment.NewLine}", "") == "")
+            if (_textEditor.Text.Replace(" ", "").Replace($"{Environment.NewLine}", "") == "") 
             {
                 _executionStatus.Background = Brushes.Green;
                 _console.Text = "Execution finished.";
@@ -292,7 +292,7 @@ namespace AvaloniaEditDemo.Views
                     catch (Exception exception)
                     {
                         sendMessageToConsole(exception.Message);
-                    }
+                    } 
                 }
             }
         }
@@ -338,16 +338,16 @@ namespace AvaloniaEditDemo.Views
             { }
         }
         public void _textEditor_TextChanged(object sender, EventArgs e)
-        {
+        {           
             var lines = _textEditor.LineCount;
             int childrens = _stackPanel.Children.Count;
             if (childrens > lines)
             {
-                _stackPanel.Children.RemoveRange(lines, childrens - lines);
+                _stackPanel.Children.RemoveRange(lines, childrens - lines);              
             }
             else if (childrens < lines)
             {
-
+                
                 for (var i = childrens; i < lines; i++)
                 {
                     var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Width = _stackPanel.Width, Background = Brush.Parse("Yellow"), Margin = Thickness.Parse("0,0") };
@@ -367,8 +367,8 @@ namespace AvaloniaEditDemo.Views
                     var caretLine = _textEditor.TextArea.Caret.Line;
                     _stackPanel.Children.Add(button);
                 }
-            }
-        }
+            }          
+        } 
         private class MyOverloadProvider : IOverloadProvider
         {
             private readonly IList<(string header, string content)> _items;
@@ -428,5 +428,5 @@ namespace AvaloniaEditDemo.Views
                 textArea.Document.Replace(completionSegment, Text);
             }
         }
-    }
+    }         
 }
