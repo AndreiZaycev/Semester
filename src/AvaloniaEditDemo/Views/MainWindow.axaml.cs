@@ -19,6 +19,9 @@ using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using Avalonia.Threading;
 using System.Threading.Tasks;
+using System.Linq;
+using Arithm;
+using static Arithm.Interpreter;
 
 namespace AvaloniaEditDemo.Views
 {
@@ -38,6 +41,7 @@ namespace AvaloniaEditDemo.Views
         public MainWindow()
         {
             InitializeComponent();
+
             _textEditor = this.FindControl<TextEditor>("Editor");
             _textEditor.Background = Brushes.Transparent;
             _textEditor.ShowLineNumbers = true;
@@ -65,8 +69,8 @@ namespace AvaloniaEditDemo.Views
             _openFileButton.Click += _openControlBtn_Click; 
 
             _console = this.FindControl<TextBox>("console");
-            // тут добавляю 2, потому что в текст эдиторе почему-то первая строка имеет пробел в 2 пикселя сверху 
-            // независимо от шрифта
+            // here I add 2, because in the editor's text for some reason the first line has a space of 2 pixels on top
+            // regardless of font
             var but = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight + 2, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
             but.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
@@ -100,27 +104,40 @@ namespace AvaloniaEditDemo.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        int counterOfBreakpoint = 0;
-        string openedFile = null;
-        private void checkColorButton()
+        private int counterOfBreakpoint = 0;
+        private string openedFile = null;
+        private int previousLine = 0;
+        private static Dicts dicts = new Dicts
+        (
+            variablesDictionary: new Dictionary<string, string>(),
+            interpretedDictionary: new Dictionary<AST.VName, AST.Expression>()
+        );
+        private int currentLine = 0;
+
+        private void deleteAllBreakpoints()
         {
-            Button lastBut = new Button();
             foreach (Button buts in _stackPanel.Children)
             {
                 if (buts.Background == Brush.Parse("Purple") || buts.Background == Brush.Parse("Red"))
                 {
-                    lastBut = buts;
+                    buts.Background = Brush.Parse("Yellow");
                 }
             }
-            if (lastBut.Background == Brush.Parse("Red"))
+        }
+        private void purpulizeBreakpoints()
+        {
+            foreach (Button buts in _stackPanel.Children)
             {
-                lastBut.Background = Brush.Parse("Purple");
+                if (buts.Background == Brush.Parse("Red"))
+                {
+                    buts.Background = Brush.Parse("Purple");
+                }
             }
         }
-        private Button drawRedBreakpoint(int line)
+        private Button getExecutableButton(int line)
         {
             var numberOfExecutedButtons = 0;
-            Button redButty = new Button();
+            Button executableButton = new Button();
             foreach (Button buttons in _stackPanel.Children)
             {
                 if (buttons.Background == Brush.Parse("Red"))
@@ -130,7 +147,7 @@ namespace AvaloniaEditDemo.Views
                 if (numberOfExecutedButtons == line)
                 {
                     buttons.Background = Brush.Parse("Red");
-                    redButty = buttons;
+                    executableButton = buttons;
                     break;
                 }
                 else
@@ -138,7 +155,13 @@ namespace AvaloniaEditDemo.Views
                     numberOfExecutedButtons++;
                 }
             }
-            return redButty;
+            return executableButton;
+        }      
+        private Dictionary<string, string> createExceptionDictionary(string exception)
+        {
+            var exceptDictionary = new Dictionary<string, string>();
+            exceptDictionary.Add("exception", exception);
+            return exceptDictionary;
         }
         private void sendMessageToConsole(string exception)
         {
@@ -170,93 +193,83 @@ namespace AvaloniaEditDemo.Views
             }
             return (line, hasBreakpoint);
         }
-        private void executeCodeWithPrintValues(string text)
+        private void executeAllCode(string text)
         {
-            var parsed = Arithm.Main.parse(text);
-            var task = new Task<Dictionary<string, string>>(() =>
+            var task = new Task<string>(() =>
             {
-                try
-                {
-                    var dict = Arithm.Interpreter.run(parsed);
-                    return dict.Item3;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                var parsedText = Arithm.Interpreter.parse(text);
+                var dict = Arithm.Interpreter.runPrint(parsedText);
+                return dict;                               
             }
              );
             task.ContinueWith(t =>
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (t.Result == null)
-                    {
-                        sendMessageToConsole("Failed while parsing");
-                    }
-                    else
-                    {
-                        _console.Text = "";
-                        foreach (var values in t.Result.Values)
-                        {
-                            _console.Text += $"{values}{Environment.NewLine}";
-                        }
+                    try
+                    {                    
+                        _console.Text = t.Result;
                         if (isSuccessfulRun)
                         {
                             _executionStatus.Background = Brushes.Green;
                         }
-                        _console.Text += "Execution finished.";
+                        _console.Text += "Execution finished.";                     
+                    }
+                    catch (Exception exception)
+                    {
+                        sendMessageToConsole(exception.Message);
                     }
                 }));
             task.Start();
         }
-        private void executeCodeWithBreakpoint(int line)
+        private void executeCodeWithBreakpoint()
         {
+            if (previousLine >= currentLine)
+            {
+                previousLine = 0;
+                dicts = new Dicts
+                (
+                    variablesDictionary: new Dictionary<string, string>(),
+                    interpretedDictionary: new Dictionary<AST.VName, AST.Expression>()
+                );
+                purpulizeBreakpoints();
+            }
             string textToExecute = "";
             string[] lines = _textEditor.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            var redButton = drawRedBreakpoint(line);
-            for (var counter = 0; counter < line; counter++)
+            var executableBreakpoint = getExecutableButton(currentLine);
+            textToExecute = string.Join(" ", lines.Skip(previousLine).Take(currentLine));
+            var task = new Task<Dicts>(() =>
             {
-                textToExecute += lines[counter] + " ";
-            }
-            var parsed = Arithm.Main.parse(textToExecute);
-            var task = new Task<Dictionary<string, string>>(() =>
-            {
-                try
-                {
-                    return Arithm.Interpreter.run(parsed).Item2;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                var parsedText = Arithm.Interpreter.parse(textToExecute);
+                dicts = Arithm.Interpreter.runVariables(dicts, parsedText);
+                return dicts;
             });
             task.ContinueWith(t =>
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (t.Result == null)
-                    {
-                        sendMessageToConsole("Failed while parsing");
-                    }
-                    else
+                    try
                     {
                         _console.Text = $"Local variables{ Environment.NewLine }";
                         _runButton.IsEnabled = true;
-                        foreach ((string keys, string values) in t.Result)
+                        foreach ((string keys, string values) in t.Result.VariablesDictionary)
                         {
-                            _console.Text += $"{keys[^2..].Replace("\"", "")} = {values}{ Environment.NewLine }";
+                            _console.Text += $"{keys} = {values}{ Environment.NewLine }";
                         }
                         if (isSuccessfulRun)
                         {
                             _executionStatus.Background = Brushes.Green;
                         }
                     }
+                    catch (Exception exception)
+                    {
+                        sendMessageToConsole(exception.Message);
+                    }                
                 }
             ));
             task.Start();
         }
         public void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            if (_textEditor.Text.Replace(" ", "").Replace($"{Environment.NewLine}", "") == "") 
+            if (_textEditor.Text.Trim() == "") 
             {
                 _executionStatus.Background = Brushes.Green;
                 _console.Text = "Execution finished.";
@@ -268,15 +281,14 @@ namespace AvaloniaEditDemo.Views
                 _executionStatus.Background = Brushes.Yellow;
                 _console.Text = "Execution started.";
                 var hasBreakpoints = false;
-                var line = 0;
-                (line, hasBreakpoints) = findLineNewBreakpoint(hasBreakpoints);
+                (currentLine, hasBreakpoints) = findLineNewBreakpoint(hasBreakpoints);
                 if (!hasBreakpoints)
                 {
                     try
                     {
-                        checkColorButton();
+                        deleteAllBreakpoints();
                         string text = _textEditor.Text;
-                        executeCodeWithPrintValues(text);
+                        executeAllCode(text);
                     }
                     catch (Exception exception)
                     {
@@ -287,13 +299,14 @@ namespace AvaloniaEditDemo.Views
                 {
                     try
                     {
-                        executeCodeWithBreakpoint(line);
+                        executeCodeWithBreakpoint();
                     }
                     catch (Exception exception)
                     {
                         sendMessageToConsole(exception.Message);
                     } 
                 }
+                previousLine = currentLine;
             }
         }
         async private void _openControlBtn_Click(object sender, RoutedEventArgs e)
@@ -309,8 +322,10 @@ namespace AvaloniaEditDemo.Views
                     _textEditor.Text = text;
                 }
             }
-            catch (Exception)
-            { }
+            catch (Exception except)
+            {
+                sendMessageToConsole(except.Message);
+            }
         }
         async private void _createFileButton_Click(object sender, RoutedEventArgs e)
         {
@@ -322,8 +337,10 @@ namespace AvaloniaEditDemo.Views
                 {
                     File.CreateText(path);
                 }
-                catch (Exception)
-                { }
+                catch (Exception except)
+                {
+                    sendMessageToConsole(except.Message); 
+                }
             }
         }
         async private void _saveFileButton_Click(object sender, RoutedEventArgs e)
@@ -334,21 +351,23 @@ namespace AvaloniaEditDemo.Views
             {
                 System.IO.File.WriteAllText(path, _textEditor.Text);
             }
-            catch (Exception)
-            { }
+            catch (Exception except)
+            { 
+                sendMessageToConsole(except.Message); 
+            }
         }
         public void _textEditor_TextChanged(object sender, EventArgs e)
         {           
             var lines = _textEditor.LineCount;
-            int childrens = _stackPanel.Children.Count;
-            if (childrens > lines)
+            int numberOfButtons = _stackPanel.Children.Count;
+            if (numberOfButtons > lines)
             {
-                _stackPanel.Children.RemoveRange(lines, childrens - lines);              
+                _stackPanel.Children.RemoveRange(lines, numberOfButtons - lines);              
             }
-            else if (childrens < lines)
+            else if (numberOfButtons < lines)
             {
                 
-                for (var i = childrens; i < lines; i++)
+                for (var i = numberOfButtons; i < lines; i++)
                 {
                     var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Width = _stackPanel.Width, Background = Brush.Parse("Yellow"), Margin = Thickness.Parse("0,0") };
                     button.Click += breakPoint_Click;
