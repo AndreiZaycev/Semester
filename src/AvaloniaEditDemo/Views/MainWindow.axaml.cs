@@ -66,26 +66,13 @@ namespace AvaloniaEditDemo.Views
             _createFileButton.Click += _createFileButton_Click;
 
             _openFileButton = this.FindControl<Button>("OpenFile");
-            _openFileButton.Click += _openControlBtn_Click; 
+            _openFileButton.Click += _openControlBtn_Click;
 
             _console = this.FindControl<TextBox>("console");
             // here I add 2, because in the editor's text for some reason the first line has a space of 2 pixels on top
             // regardless of font
-            var but = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight + 2, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
-            but.Click += but_Click;
-            void but_Click(object sender, RoutedEventArgs e)
-            {
-                counterOfBreakpoint = 0;
-                if (but.Background == Brush.Parse("Yellow"))
-                {
-                    but.Background = Brush.Parse("Purple");
-                }
-                else
-                {
-                    but.Background = Brush.Parse("Yellow");
-                }
-            }
-            _stackPanel.Children.Add(but);
+            var button = createButton();
+            _stackPanel.Children.Add(button);
             // syntax highlighting 
             using (StreamReader s =
             new StreamReader(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "/highlighter.xshd"))
@@ -97,7 +84,7 @@ namespace AvaloniaEditDemo.Views
                     reader,
                     HighlightingManager.Instance);
                 }
-            } 
+            }
         }
         private void InitializeComponent()
         {
@@ -105,8 +92,10 @@ namespace AvaloniaEditDemo.Views
         }
 
         private int counterOfBreakpoint = 0;
+        private bool firstButton = true;
         private string openedFile = null;
         private int previousLine = 0;
+        private bool isDebug = false;
         private static Dicts dicts = new Dicts
         (
             variablesDictionary: new Dictionary<string, string>(),
@@ -118,21 +107,37 @@ namespace AvaloniaEditDemo.Views
         {
             foreach (Button buts in _stackPanel.Children)
             {
-                if (buts.Background == Brush.Parse("Purple") || buts.Background == Brush.Parse("Red"))
+                if (buts.Background == Brush.Parse("Green") || buts.Background == Brush.Parse("Red"))
                 {
                     buts.Background = Brush.Parse("Yellow");
                 }
             }
         }
-        private void purpulizeBreakpoints()
+        private Button createButton()
         {
-            foreach (Button buts in _stackPanel.Children)
+            var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
+            if (firstButton)
             {
-                if (buts.Background == Brush.Parse("Red"))
+                button.Height += 2;
+                firstButton = false;
+            }
+            button.Click += but_Click;
+            void but_Click(object sender, RoutedEventArgs e)
+            {
+                if (!isDebug)
                 {
-                    buts.Background = Brush.Parse("Purple");
+                    counterOfBreakpoint = 0;
+                    if (button.Background == Brush.Parse("Yellow"))
+                    {
+                        button.Background = Brush.Parse("Green");
+                    }
+                    else
+                    {
+                        button.Background = Brush.Parse("Yellow");
+                    }
                 }
             }
+            return button;
         }
         private Button getExecutableButton(int line)
         {
@@ -142,7 +147,7 @@ namespace AvaloniaEditDemo.Views
             {
                 if (buttons.Background == Brush.Parse("Red"))
                 {
-                    buttons.Background = Brush.Parse("Purple");
+                    buttons.Background = Brush.Parse("Green");
                 }
                 if (numberOfExecutedButtons == line)
                 {
@@ -157,12 +162,6 @@ namespace AvaloniaEditDemo.Views
             }
             return executableButton;
         }      
-        private Dictionary<string, string> createExceptionDictionary(string exception)
-        {
-            var exceptDictionary = new Dictionary<string, string>();
-            exceptDictionary.Add("exception", exception);
-            return exceptDictionary;
-        }
         private void sendMessageToConsole(string exception)
         {
             _console.Text = exception;
@@ -176,7 +175,7 @@ namespace AvaloniaEditDemo.Views
             var numOfButton = 0;
             foreach (Button button in _stackPanel.Children)
             {
-                if (button.Background == Brush.Parse("Purple") || button.Background == Brush.Parse("Red"))
+                if (button.Background == Brush.Parse("Green") || button.Background == Brush.Parse("Red"))
                 {
                     if (numOfButton == counterOfBreakpoint)
                     {
@@ -195,11 +194,11 @@ namespace AvaloniaEditDemo.Views
         }
         private void executeAllCode(string text)
         {
+            isDebug = false;
+            var parsedText = Arithm.Interpreter.parse(text);
             var task = new Task<string>(() =>
             {
-                var parsedText = Arithm.Interpreter.parse(text);
-                var dict = Arithm.Interpreter.runPrint(parsedText);
-                return dict;                               
+                return Arithm.Interpreter.runPrint(parsedText);                               
             }
              );
             task.ContinueWith(t =>
@@ -223,6 +222,7 @@ namespace AvaloniaEditDemo.Views
         }
         private void executeCodeWithBreakpoint()
         {
+            isDebug = true;
             if (previousLine >= currentLine)
             {
                 previousLine = 0;
@@ -231,41 +231,57 @@ namespace AvaloniaEditDemo.Views
                     variablesDictionary: new Dictionary<string, string>(),
                     interpretedDictionary: new Dictionary<AST.VName, AST.Expression>()
                 );
-                purpulizeBreakpoints();
             }
-            string textToExecute = "";
+            var prev = previousLine;
+            var cur = currentLine;
             string[] lines = _textEditor.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var executableBreakpoint = getExecutableButton(currentLine);
-            textToExecute = string.Join(" ", lines.Skip(previousLine).Take(currentLine));
-            var task = new Task<Dicts>(() =>
+            var textToExecute = string.Join(" ", lines[previousLine .. currentLine]);
+            if (textToExecute.Trim() == "") 
+            {
+                _executionStatus.Background = Brushes.Green;
+                _console.Text = $"Local variables is empty";
+            }
+            else
             {
                 var parsedText = Arithm.Interpreter.parse(textToExecute);
-                dicts = Arithm.Interpreter.runVariables(dicts, parsedText);
-                return dicts;
-            });
-            task.ContinueWith(t =>
-                Dispatcher.UIThread.Post(() =>
+                var task = new Task<Dicts>(() =>
                 {
-                    try
+                    dicts = Arithm.Interpreter.runVariables(dicts, parsedText);
+                    return dicts;
+                });
+                task.ContinueWith(t =>
+                    Dispatcher.UIThread.Post(() =>
                     {
-                        _console.Text = $"Local variables{ Environment.NewLine }";
-                        _runButton.IsEnabled = true;
-                        foreach ((string keys, string values) in t.Result.VariablesDictionary)
+                        try
                         {
-                            _console.Text += $"{keys} = {values}{ Environment.NewLine }";
+                            if (t.Result.VariablesDictionary.Count == 0)
+                            {
+                                _console.Text = $"Local variables is empty";
+                            }
+                            else
+                            {
+                                _console.Text = $"Local variables{ Environment.NewLine }";
+                                _runButton.IsEnabled = true;
+                                foreach ((string keys, string values) in t.Result.VariablesDictionary)
+                                {
+                                    _console.Text += $"{keys} = {values}{ Environment.NewLine }";                               
+                                }
+                                if (isSuccessfulRun)
+                                {
+                                    _executionStatus.Background = Brushes.Green;
+                                }
+                            }
                         }
-                        if (isSuccessfulRun)
+                        catch (Exception exception)
                         {
-                            _executionStatus.Background = Brushes.Green;
-                        }
+                            sendMessageToConsole(exception.Message);
+                        }                
                     }
-                    catch (Exception exception)
-                    {
-                        sendMessageToConsole(exception.Message);
-                    }                
-                }
-            ));
-            task.Start();
+
+                ));                
+                task.Start();
+            }
         }
         public void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
@@ -369,20 +385,7 @@ namespace AvaloniaEditDemo.Views
                 
                 for (var i = numberOfButtons; i < lines; i++)
                 {
-                    var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Width = _stackPanel.Width, Background = Brush.Parse("Yellow"), Margin = Thickness.Parse("0,0") };
-                    button.Click += breakPoint_Click;
-                    void breakPoint_Click(object sender, RoutedEventArgs e)
-                    {
-                        counterOfBreakpoint = 0;
-                        if (button.Background == Brush.Parse("Yellow"))
-                        {
-                            button.Background = Brush.Parse("Purple");
-                        }
-                        else
-                        {
-                            button.Background = Brush.Parse("Yellow");
-                        }
-                    }
+                    var button = createButton();
                     var caretLine = _textEditor.TextArea.Caret.Line;
                     _stackPanel.Children.Add(button);
                 }

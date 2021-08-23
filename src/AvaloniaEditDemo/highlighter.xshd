@@ -6,5 +6,8 @@
             <Word>let</Word>
             <Word>print</Word>
         </Keywords>
+        <Rule foreground="Red">
+            [0-9]+
+        </Rule>
     </RuleSet>
 </SyntaxDefinition>
