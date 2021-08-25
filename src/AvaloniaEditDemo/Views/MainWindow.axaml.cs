@@ -92,10 +92,10 @@ namespace AvaloniaEditDemo.Views
         }
 
         private int counterOfBreakpoint = 0;
+        private bool isFirstDebug = true;
         private bool firstButton = true;
         private string openedFile = null;
         private int previousLine = 0;
-        private bool isDebug = false;
         private static Dicts dicts = new Dicts
         (
             variablesDictionary: new Dictionary<string, string>(),
@@ -124,18 +124,14 @@ namespace AvaloniaEditDemo.Views
             button.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
-                if (!isDebug)
+                if (button.Background == Brush.Parse("Yellow"))
                 {
-                    counterOfBreakpoint = 0;
-                    if (button.Background == Brush.Parse("Yellow"))
-                    {
-                        button.Background = Brush.Parse("Green");
-                    }
-                    else
-                    {
-                        button.Background = Brush.Parse("Yellow");
-                    }
+                    button.Background = Brush.Parse("Green");
                 }
+                else
+                {
+                    button.Background = Brush.Parse("Yellow");
+                }            
             }
             return button;
         }
@@ -175,6 +171,13 @@ namespace AvaloniaEditDemo.Views
             var numOfButton = 0;
             foreach (Button button in _stackPanel.Children)
             {
+                if (!isFirstDebug)
+                {
+                    if (button.Background == Brush.Parse("Red"))
+                    {
+                        numOfButton = counterOfBreakpoint - 1; 
+                    }
+                }
                 if (button.Background == Brush.Parse("Green") || button.Background == Brush.Parse("Red"))
                 {
                     if (numOfButton == counterOfBreakpoint)
@@ -187,14 +190,19 @@ namespace AvaloniaEditDemo.Views
                     {
                         numOfButton++;
                     }
-                }
+                }               
                 line++;
+            }
+            if (isFirstDebug)
+            {
+                isFirstDebug = false;
             }
             return (line, hasBreakpoint);
         }
         private void executeAllCode(string text)
         {
-            isDebug = false;
+            counterOfBreakpoint = 0;
+            isFirstDebug = true;
             var parsedText = Arithm.Interpreter.parse(text);
             var task = new Task<string>(() =>
             {
@@ -222,7 +230,6 @@ namespace AvaloniaEditDemo.Views
         }
         private void executeCodeWithBreakpoint()
         {
-            isDebug = true;
             if (previousLine >= currentLine)
             {
                 previousLine = 0;
