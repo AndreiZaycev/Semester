@@ -113,6 +113,18 @@ namespace AvaloniaEditDemo.Views
                 }
             }
         }
+
+        private Microsoft.FSharp.Collections.FSharpList<AST.Stmt> getAST(string text)
+        {
+            if (text == "")
+            {
+                return Microsoft.FSharp.Collections.FSharpList<AST.Stmt>.Empty;
+            }
+            else
+            {
+                return parse(text);
+            }
+        }
         private Button createButton()
         {
             var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brush.Parse("Yellow") };
@@ -244,14 +256,14 @@ namespace AvaloniaEditDemo.Views
             string[] lines = _textEditor.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var executableBreakpoint = getExecutableButton(currentLine);
             var textToExecute = string.Join(" ", lines[previousLine .. currentLine]);
-            if (textToExecute.Trim() == "") 
+            if (string.Join(" ", lines[0 .. currentLine]).Trim() == "") 
             {
                 _executionStatus.Background = Brushes.Green;
-                _console.Text = $"Local variables is empty";
+                _console.Text = $"Local variables are empty";
             }
             else
             {
-                var parsedText = Arithm.Interpreter.parse(textToExecute);
+                var parsedText = getAST(textToExecute);
                 var task = new Task<Dicts>(() =>
                 {
                     dicts = Arithm.Interpreter.runVariables(dicts, parsedText);
@@ -264,7 +276,7 @@ namespace AvaloniaEditDemo.Views
                         {
                             if (t.Result.VariablesDictionary.Count == 0)
                             {
-                                _console.Text = $"Local variables is empty";
+                                _console.Text = $"Local variables are empty";
                             }
                             else
                             {
