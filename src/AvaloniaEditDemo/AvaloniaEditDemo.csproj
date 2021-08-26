@@ -14,7 +14,7 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Arithm" Version="1.0.8" />
+    <PackageReference Include="Arithm" Version="1.0.9" />
     <PackageReference Include="Avalonia" Version="0.10.2" />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.10.0" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.2" />

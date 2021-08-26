@@ -136,14 +136,17 @@ namespace AvaloniaEditDemo.Views
             button.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
-                if (button.Background == Brush.Parse("Yellow"))
+                if (button.Background != Brush.Parse("Red"))
                 {
-                    button.Background = Brush.Parse("Green");
+                    if (button.Background == Brush.Parse("Yellow"))
+                    {
+                        button.Background = Brush.Parse("Green");
+                    }
+                    else
+                    {
+                        button.Background = Brush.Parse("Yellow");
+                    }            
                 }
-                else
-                {
-                    button.Background = Brush.Parse("Yellow");
-                }            
             }
             return button;
         }
