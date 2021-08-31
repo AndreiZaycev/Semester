@@ -17,8 +17,8 @@
             <Button Name="OpenFile" Content="OpenFile" />
             <Button Name="CreateFile" Content="CreateFile" />
             <Button Name="SaveFile" Content="SaveFile" />
-
         </StackPanel>
+        <StackPanel Name="fakeStack" IsEnabled="False" />
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
