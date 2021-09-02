@@ -88,8 +88,6 @@ namespace AvaloniaEditDemo.Views
         private int lineOfLinearDebugEnd;
         private int caretLineBeforeChanging = 1;
         private string textBeforeCaretChanging = "";
-        private int counterOfBreakpoint = 0;
-        private bool isFirstDebug = true;
         bool alreadyPushButton = false;
         private bool firstButton = true;
         private string openedFile = null;
@@ -235,8 +233,6 @@ namespace AvaloniaEditDemo.Views
         }
         private void executeAllCode(string text)
         {
-            counterOfBreakpoint = 0;
-            isFirstDebug = true;
             _stopButton.IsVisible = true;
             var parsedText = Arithm.Interpreter.parse(text);
             var task = new Task<string>(() =>
@@ -397,7 +393,6 @@ namespace AvaloniaEditDemo.Views
                     else
                     {
                         stopExecuteBreakpoints();
-                        counterOfBreakpoint = 0;
                         isSuccessfulRun = true;
                         _console.Text = "Debug dropped.";
                         _executionStatus.Background = Brushes.White;
