@@ -14,8 +14,8 @@
                     Spacing="5"
                     Margin="3">
             <Button Content="Run" Name="Run"/>
+            <Button Name="Stop" Content="Stop" />
             <Button Name="OpenFile" Content="OpenFile" />
-            <Button Name="CreateFile" Content="CreateFile" />
             <Button Name="SaveFile" Content="SaveFile" />
         </StackPanel>
         <StackPanel Name="fakeStack" IsEnabled="False" />

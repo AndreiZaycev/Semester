@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Arithm;
 using static Arithm.Interpreter;
+using Avalonia.Input;
 
 namespace AvaloniaEditDemo.Views
 {
@@ -24,12 +25,12 @@ namespace AvaloniaEditDemo.Views
         private readonly TextEditor _textEditor;
         private Button _runButton;
         private Button _openFileButton;
-        private Button _createFileButton;
         private Button _saveFileButton;
         private TextBox _console;
         private StackPanel _stackPanel;
         private readonly TextBlock _executionStatus;
         private bool isSuccessfulRun = true;
+        private Button _stopButton;
 
         public MainWindow()
         {
@@ -46,6 +47,10 @@ namespace AvaloniaEditDemo.Views
 
             _executionStatus = this.FindControl<TextBlock>("executionStatus");
 
+            _stopButton = this.FindControl<Button>("Stop");
+            _stopButton.Click += _stopButton_Click;
+            _stopButton.IsVisible = false;
+
             _stackPanel = this.FindControl<StackPanel>("stackPanel");
 
             _runButton = this.FindControl<Button>("Run");
@@ -53,9 +58,6 @@ namespace AvaloniaEditDemo.Views
 
             _saveFileButton = this.FindControl<Button>("SaveFile");
             _saveFileButton.Click += _saveFileButton_Click;
-
-            _createFileButton = this.FindControl<Button>("CreateFile");
-            _createFileButton.Click += _createFileButton_Click;
 
             _openFileButton = this.FindControl<Button>("OpenFile");
             _openFileButton.Click += _openControlBtn_Click;
@@ -88,6 +90,7 @@ namespace AvaloniaEditDemo.Views
         private string textBeforeCaretChanging = "";
         private int counterOfBreakpoint = 0;
         private bool isFirstDebug = true;
+        bool alreadyPushButton = false;
         private bool firstButton = true;
         private string openedFile = null;
         private int previousLine = 0;
@@ -234,15 +237,17 @@ namespace AvaloniaEditDemo.Views
         {
             counterOfBreakpoint = 0;
             isFirstDebug = true;
+            _stopButton.IsVisible = true;
             var parsedText = Arithm.Interpreter.parse(text);
             var task = new Task<string>(() =>
-            {
+            {            
                 return Arithm.Interpreter.runPrint(parsedText);                               
             }
              );
             task.ContinueWith(t =>
                 Dispatcher.UIThread.Post(() =>
                 {
+                    
                     try
                     {                    
                         _console.Text = t.Result;
@@ -256,6 +261,7 @@ namespace AvaloniaEditDemo.Views
                     {
                         sendMessageToConsole(exception.Message);
                     }
+                    _stopButton.IsVisible = false;
                 }));
             task.Start();
         }
@@ -280,24 +286,27 @@ namespace AvaloniaEditDemo.Views
                 if (string.Join(" ", lines[previousLine .. currentLine]).Trim() == "") 
                 {
                     _executionStatus.Background = Brushes.Green;
-                    _console.Text = $"Local variables are empty";
+                    _console.Text = $"Local variables are empty.";
                 }
                 else
-                {
+                {  
+                    _stopButton.IsVisible = true;             
                     var parsedText = getAST(textToExecute);
                     var task = new Task<Dicts>(() =>
                     {
+                        
                         dicts = Arithm.Interpreter.runVariables(dicts, parsedText);
                         return dicts;
                     });
                     task.ContinueWith(t =>
                         Dispatcher.UIThread.Post(() =>
                         {
+                            
                             try
                             {
                                 if (t.Result.VariablesDictionary.Count == 0)
                                 {
-                                    _console.Text = $"Local variables are empty";
+                                    _console.Text = $"Local variables are empty.";
                                 }
                                 else
                                 {
@@ -316,38 +325,47 @@ namespace AvaloniaEditDemo.Views
                             catch (Exception exception)
                             {
                                 sendMessageToConsole(exception.Message);
-                            }                
+                            }    
+                            _stopButton.IsVisible = false;          
                         }
 
                     ));                
                     task.Start();
+                    
                 }
             }
         }
         
-        private void setExecutionBegin()
+        private void setExecutionBegin(bool runAllCode)
         {
             _console.Text = "";
             isSuccessfulRun = true;
             _executionStatus.Background = Brushes.Yellow;
-            _console.Text = "Execution started.";
+            if (runAllCode)
+            {
+                _console.Text = "Execution started.";
+            }
+            else
+            {
+                _console.Text = "Debug started.";
+            }
         }
 
-        private void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        private void mainRunCode()
         {
-            if (_textEditor.Text.Trim() == "") 
+            if (_textEditor.Text.Trim() == "")
             {
                 _executionStatus.Background = Brushes.Green;
                 _console.Text = "Execution finished.";
             }
             else
-            {             
+            {
                 var hasBreakpoints = false;
                 (currentLine, hasBreakpoints) = findLineNewBreakpoint(hasBreakpoints);
                 if (!hasBreakpoints && (lineOfLinearDebugEnd > _stackPanel.Children.Count || (((Button)_stackPanel.Children.ElementAt(lineOfLinearDebugEnd)).Background != Brush.Parse("Red") || isSuccessfulRun)))
                 {
                     _runButton.Content = "Run";
-                    setExecutionBegin();
+                    setExecutionBegin(true);
                     try
                     {
                         deleteAllBreakpoints();
@@ -366,22 +384,22 @@ namespace AvaloniaEditDemo.Views
                     _runButton.Content = "Continue";
                     if (isSuccessfulRun)
                     {
-                        setExecutionBegin();
+                        setExecutionBegin(false);
                         try
-                        {  
+                        {
                             executeCodeWithBreakpoint();
                         }
                         catch (Exception exception)
                         {
                             sendMessageToConsole(exception.Message);
-                        } 
+                        }
                     }
                     else
                     {
                         stopExecuteBreakpoints();
                         counterOfBreakpoint = 0;
                         isSuccessfulRun = true;
-                        _console.Text = "Debug dropped";
+                        _console.Text = "Debug dropped.";
                         _executionStatus.Background = Brushes.White;
                         lineOfLinearDebugEnd = 0;
                         _runButton.Content = "Run";
@@ -390,52 +408,80 @@ namespace AvaloniaEditDemo.Views
             }
             previousLine = currentLine;
         }
+
+        private void _runControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            alreadyPushButton = false;
+            if (_executionStatus.Background == Brushes.Yellow)
+            { 
+                var txt = _console.Text;
+                var debugMessage = "If you want to continue, you should wait until the code is executed or stop debugging.";
+                if (_console.Text == "Debug started." || _console.Text == debugMessage)
+                {
+                    _console.Text = debugMessage;
+                }
+                else
+                {
+                    _console.Text = "the previous code has not been executed yet, are you sure you want to continue? \n press 'y' if you want to continue, 'n' if not.";
+                }
+                _console.KeyUp += _console_KeyUp;
+                void _console_KeyUp(object sender, KeyEventArgs e)
+                {
+                    if (!alreadyPushButton)
+                    {
+                        if (e.Key == Key.Y)
+                        {
+                            alreadyPushButton = true;
+                            mainRunCode();
+                        }
+                        else if (e.Key != Key.N)
+                        {
+                            _console.Text = "press 'y' if you want to continue, 'n' if not.";
+                        }
+                        else
+                        {
+                            alreadyPushButton = true;
+                            _console.Text = txt.Replace("started", "continued");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                mainRunCode();
+            } 
+        }
+
+        private void _stopButton_Click(object sender, RoutedEventArgs e)
+        {
+            var currentText = _textEditor.Text;
+            _textEditor.Text = "";
+            mainRunCode();
+            _textEditor.Text = currentText;
+            _executionStatus.Background = Brushes.White;
+            _console.Text = "Execution stopped.";
+            _stopButton.IsVisible = false;
+            _runButton.Content = "Run";
+            lineOfLinearDebugEnd = 0;
+        }
+          
         async private void _openControlBtn_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
+            var ofd = new OpenFileDialog();
+            ofd.Filters.Add(new FileDialogFilter() { Name = "Txt", Extensions = { "txt" } });
             var path = await ofd.ShowAsync(this);
-            try
+            if (path != null && path.Length > 0)
             {
-                using (StreamReader sr = new StreamReader(path[0]))
-                {
-                    string text = sr.ReadToEnd();
-                    openedFile = path[0];
-                    _textEditor.Text = text;
-                }
-            }
-            catch (Exception except)
-            {
-                sendMessageToConsole(except.Message);
-            }
-        }
-        async private void _createFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog sfd = new SaveFileDialog();
-            var path = await sfd.ShowAsync(this);
-            if (!File.Exists(path))
-            {
-                try
-                {
-                    File.CreateText(path);
-                }
-                catch (Exception except)
-                {
-                    sendMessageToConsole(except.Message); 
-                }
+                _textEditor.Text = File.ReadAllText(path[0]);
+                openedFile = path[0];
             }
         }
         async private void _saveFileButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog sw = new SaveFileDialog();
-            string path = openedFile ?? await sw.ShowAsync(this);
-            try
-            {
-                System.IO.File.WriteAllText(path, _textEditor.Text);
-            }
-            catch (Exception except)
-            {
-                sendMessageToConsole(except.Message);
-            }
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialFileName = openedFile;
+            var path = await saveFileDialog.ShowAsync(this);
+            if (path != null) File.WriteAllText(path, _textEditor.Text);
         }
 
         private void addChildrensRange(int begin, int count)
