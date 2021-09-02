@@ -14,7 +14,7 @@
                     Spacing="5"
                     Margin="3">
             <Button Content="Run" Name="Run"/>
-            <Button Name="Stop" Content="Stop" />
+            <Button Name="Stop" Content="Stop" IsVisible="False"/>
             <Button Name="OpenFile" Content="OpenFile" />
             <Button Name="SaveFile" Content="SaveFile" />
         </StackPanel>
@@ -35,8 +35,9 @@
                     <Grid>
                         <Border BorderBrush="Black" BorderThickness="3">
                             <AvalonEdit:TextEditor
+                                                    ShowLineNumbers="True"
                                                     Name="Editor"
-                                                    Background="Black"
+                                                    Background="White"
                                                     Margin="50,0,0,0"
                                                     Foreground="Black"
                                                     HorizontalScrollBarVisibility="Hidden"
