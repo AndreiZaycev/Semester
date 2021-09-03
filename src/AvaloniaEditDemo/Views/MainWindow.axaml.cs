@@ -69,8 +69,8 @@ namespace AvaloniaEditDemo.Views
         private int currentLine = 0;   
         private void StopAndRunChangingRoles(bool isRunEnabled)
         {
-            if (isRunEnabled) { _stopButton.IsVisible = false; _runButton.IsEnabled = true; }
-            else { _stopButton.IsVisible = true; _runButton.IsEnabled = false; }
+            if (isRunEnabled) { _stopButton.IsVisible = false; _runButton.IsEnabled = true; _openFileButton.IsEnabled = true; _saveFileButton.IsEnabled = true; }
+            else { _stopButton.IsVisible = true; _runButton.IsEnabled = false; _openFileButton.IsEnabled = false; _saveFileButton.IsEnabled = false; }
         }
         private static Microsoft.FSharp.Collections.FSharpList<AST.Stmt> GetAST(string text)
         {
@@ -84,8 +84,11 @@ namespace AvaloniaEditDemo.Views
             button.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
-                if (button.Background == Brushes.Yellow) button.Background = Brushes.Green;               
-                else button.Background = Brushes.Yellow;                              
+                if (_executionStatus.Background != Brushes.Yellow)
+                {
+                    if (button.Background == Brushes.Yellow) button.Background = Brushes.Green;               
+                    else button.Background = Brushes.Yellow;                              
+                }
             }
             return button;
         }    
