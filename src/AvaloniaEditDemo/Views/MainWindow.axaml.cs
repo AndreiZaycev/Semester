@@ -60,6 +60,7 @@ namespace AvaloniaEditDemo.Views
         private int lineOfLinearDebugEnd;
         private int caretLineBeforeChanging = 1;
         private string textBeforeCaretChanging = "";
+        private bool isFirstDebugBreakpoint;
         private bool firstButton = true;
         private string openedFile = null;
         private int previousLine = 0;
@@ -125,13 +126,14 @@ namespace AvaloniaEditDemo.Views
                 }               
                 line += 1;
             }
-            if (!findRedBreakpoint && lineOfFirstGreenBreakpoint != -1) 
+            if (!findRedBreakpoint && lineOfFirstGreenBreakpoint != -1)
             {
                 ((Button)_stackPanel.Children.ElementAt(lineOfFirstGreenBreakpoint)).Background = Brushes.Red;
                 lineOfLinearDebugEnd = lineOfFirstGreenBreakpoint;
+                isFirstDebugBreakpoint = true;
                 return (lineOfFirstGreenBreakpoint, true);
             }
-            else return (line, hasBreakpoint);
+            else { isFirstDebugBreakpoint = false; return (line, hasBreakpoint); }
         }      
         private void SetExecutionBegin(bool runAllCode)
         {
@@ -236,7 +238,7 @@ namespace AvaloniaEditDemo.Views
                 else
                 {
                     _runButton.Content = "Continue";
-                    if (isSuccessfulRun)
+                    if (isSuccessfulRun || isFirstDebugBreakpoint)
                     {
                         SetExecutionBegin(false);
                         ExecuteCodeWithBreakpoint();                       
