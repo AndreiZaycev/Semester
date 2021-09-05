@@ -57,6 +57,7 @@ namespace AvaloniaEditDemo.Views
             _textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
         }
         private void InitializeComponent() { AvaloniaXamlLoader.Load(this); }
+        const string empty = "Local variables are empty.";
         private int lineOfLinearDebugEnd;
         private int caretLineBeforeChanging = 1;
         private string textBeforeCaretChanging = "";
@@ -70,7 +71,8 @@ namespace AvaloniaEditDemo.Views
         private int currentLine = 0;   
         private void StopAndRunChangingRoles(bool isRunEnabled)
         {
-            if (isRunEnabled) { _stopButton.IsVisible = false; _runButton.IsEnabled = true; _openFileButton.IsEnabled = true; _saveFileButton.IsEnabled = true; }
+            if (isRunEnabled) 
+            { _stopButton.IsVisible = false; _runButton.IsEnabled = true; _openFileButton.IsEnabled = true; _saveFileButton.IsEnabled = true; }
             else { _stopButton.IsVisible = true; _runButton.IsEnabled = false; _openFileButton.IsEnabled = false; _saveFileButton.IsEnabled = false; }
         }
         private static Microsoft.FSharp.Collections.FSharpList<AST.Stmt> GetAST(string text)
@@ -80,7 +82,11 @@ namespace AvaloniaEditDemo.Views
         }
         private Button CreateButton()
         {
-            var button = new Button() { Height = _textEditor.TextArea.TextView.DefaultLineHeight, Margin = Thickness.Parse("0,0"), Width = _stackPanel.Width, Background = Brushes.Yellow };
+            var button = new Button() 
+            { 
+                Height = _textEditor.TextArea.TextView.DefaultLineHeight, Margin = Thickness.Parse("0,0"),
+                Width = _stackPanel.Width, Background = Brushes.Yellow 
+            };
             if (firstButton) { button.Height += 2; firstButton = false; }        
             button.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
@@ -106,7 +112,8 @@ namespace AvaloniaEditDemo.Views
             var lineOfFirstGreenBreakpoint = -1;
             foreach (Button button in _stackPanel.Children)
             {
-                if (lineOfFirstGreenBreakpoint == -1 && line >= lineOfLinearDebugEnd && button.Background == Brushes.Green) lineOfFirstGreenBreakpoint = line;
+                if (lineOfFirstGreenBreakpoint == -1 && line >= lineOfLinearDebugEnd && button.Background == Brushes.Green) 
+                    lineOfFirstGreenBreakpoint = line;
                 if (findRedBreakpoint)
                 {
                     if (button.Background == Brushes.Green)
@@ -164,7 +171,7 @@ namespace AvaloniaEditDemo.Views
                     {
                         StopAndRunChangingRoles(true);
                         _executionStatus.Background = Brushes.Green;
-                        _console.Text = $"Local variables are empty.";
+                        _console.Text = empty;
                     }
                     else
                     {
@@ -174,10 +181,10 @@ namespace AvaloniaEditDemo.Views
                             {
                                 try
                                 {
-                                    if (t.Result.VariablesDictionary.Count == 0) _console.Text = $"Local variables are empty.";
+                                    if (t.Result.VariablesDictionary.Count == 0) _console.Text = empty;
                                     else
                                     {
-                                        _console.Text = $"Local variables{ Environment.NewLine }";
+                                        _console.Text = $"Local variables{Environment.NewLine}";
                                         foreach ((string keys, string values) in t.Result.VariablesDictionary)
                                             _console.Text += $"{keys} = {values}{Environment.NewLine}";
                                         if (isSuccessfulRun) _executionStatus.Background = Brushes.Green;
