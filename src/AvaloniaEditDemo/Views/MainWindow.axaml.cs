@@ -68,58 +68,58 @@ namespace AvaloniaEditDemo.Views
         private static Dicts dicts = new(
             variablesDictionary: new Dictionary<string, string>(),
             interpretedDictionary: new Dictionary<AST.VName, AST.Expression>());
-        private int currentLine = 0;   
+        private int currentLine = 0;
         private void StopAndRunChangingRoles(bool isRunEnabled)
         {
-            if (isRunEnabled) 
-            { 
-                _stopButton.IsVisible = false; 
-                _runButton.IsEnabled = true; 
-                _openFileButton.IsEnabled = true; 
-                _saveFileButton.IsEnabled = true; 
+            if (isRunEnabled)
+            {
+                _stopButton.IsVisible = false;
+                _runButton.IsEnabled = true;
+                _openFileButton.IsEnabled = true;
+                _saveFileButton.IsEnabled = true;
             }
-            else 
-            { 
+            else
+            {
                 _stopButton.IsVisible = true;
                 _runButton.IsEnabled = false;
-                _openFileButton.IsEnabled = false; 
-                _saveFileButton.IsEnabled = false; 
+                _openFileButton.IsEnabled = false;
+                _saveFileButton.IsEnabled = false;
             }
         }
         private static Microsoft.FSharp.Collections.FSharpList<AST.Stmt> GetAST(string text)
         {
-            if (text == "") 
-                return Microsoft.FSharp.Collections.FSharpList<AST.Stmt>.Empty;          
-            else 
-                return parse(text);            
+            if (text == "")
+                return Microsoft.FSharp.Collections.FSharpList<AST.Stmt>.Empty;
+            else
+                return parse(text);
         }
         private Button CreateButton()
         {
-            var button = new Button() 
-            { 
+            var button = new Button()
+            {
                 Height = _textEditor.TextArea.TextView.DefaultLineHeight,
                 Margin = Thickness.Parse("0,0"),
-                Width = _stackPanel.Width, 
-                Background = Brushes.Yellow 
+                Width = _stackPanel.Width,
+                Background = Brushes.Yellow
             };
-            if (firstButton) 
-            { 
-                button.Height += 2; 
-                firstButton = false; 
-            }        
+            if (firstButton)
+            {
+                button.Height += 2;
+                firstButton = false;
+            }
             button.Click += but_Click;
             void but_Click(object sender, RoutedEventArgs e)
             {
                 if (_executionStatus.Background != Brushes.Yellow)
                 {
-                    if (button.Background == Brushes.Yellow) 
-                        button.Background = Brushes.Green;               
-                    else 
-                        button.Background = Brushes.Yellow;                              
+                    if (button.Background == Brushes.Yellow)
+                        button.Background = Brushes.Green;
+                    else
+                        button.Background = Brushes.Yellow;
                 }
             }
             return button;
-        }    
+        }
         private void SendMessageToConsole(string exception)
         {
             _console.Text = exception;
@@ -133,7 +133,7 @@ namespace AvaloniaEditDemo.Views
             var firstBreakpoint = -1;
             foreach (Button button in _stackPanel.Children)
             {
-                if (firstBreakpoint == -1 && line >= lineOfLinearDebugEnd && button.Background == Brushes.Green) 
+                if (firstBreakpoint == -1 && line >= lineOfLinearDebugEnd && button.Background == Brushes.Green)
                     firstBreakpoint = line;
                 if (findRedBreakpoint)
                 {
@@ -151,7 +151,7 @@ namespace AvaloniaEditDemo.Views
                     previousLine = line;
                     lineOfLinearDebugEnd = line;
                     findRedBreakpoint = true;
-                }               
+                }
                 line += 1;
             }
             if (!findRedBreakpoint && firstBreakpoint != -1)
@@ -162,19 +162,19 @@ namespace AvaloniaEditDemo.Views
                 return (firstBreakpoint, true);
             }
             else
-            { 
-                isFirstDebugBreakpoint = false; 
-                return (line, hasBreakpoint); 
+            {
+                isFirstDebugBreakpoint = false;
+                return (line, hasBreakpoint);
             }
-        }      
+        }
         private void SetExecutionBegin(bool runAllCode)
         {
             _console.Text = "";
             isSuccessfulRun = true;
             _executionStatus.Background = Brushes.Yellow;
-            if (runAllCode) 
-                _console.Text = "Execution started.";           
-            else 
+            if (runAllCode)
+                _console.Text = "Execution started.";
+            else
                 _console.Text = "Debug started.";
         }
         private void RunControlBtn_Click(object sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -207,21 +207,21 @@ namespace AvaloniaEditDemo.Views
                             {
                                 try
                                 {
-                                    if (t.Result.VariablesDictionary.Count == 0) 
+                                    if (t.Result.VariablesDictionary.Count == 0)
                                         _console.Text = empty;
                                     else
                                     {
                                         _console.Text = $"Local variables{Environment.NewLine}";
                                         foreach ((string keys, string values) in t.Result.VariablesDictionary)
                                             _console.Text += $"{keys} = {values}{Environment.NewLine}";
-                                        if (isSuccessfulRun) 
+                                        if (isSuccessfulRun)
                                             _executionStatus.Background = Brushes.Green;
                                     }
                                 }
-                                catch (Exception exception) 
+                                catch (Exception exception)
                                 {
                                     isSuccessfulRun = false;
-                                    SendMessageToConsole(exception.Message); 
+                                    SendMessageToConsole(exception.Message);
                                 }
                                 StopAndRunChangingRoles(true);
                             }
@@ -240,25 +240,25 @@ namespace AvaloniaEditDemo.Views
                         try
                         {
                             _console.Text = t.Result;
-                            if (isSuccessfulRun) 
-                            { 
-                                _executionStatus.Background = Brushes.Green; 
-                                _console.Text += "Execution finished."; 
-                            }      
+                            if (isSuccessfulRun)
+                            {
+                                _executionStatus.Background = Brushes.Green;
+                                _console.Text += "Execution finished.";
+                            }
                         }
-                        catch (Exception exception) 
+                        catch (Exception exception)
                         {
                             isSuccessfulRun = false;
-                            SendMessageToConsole(exception.Message); 
+                            SendMessageToConsole(exception.Message);
                         }
                         StopAndRunChangingRoles(true);
                     }));
                 task.Start();
             }
-            if (_textEditor.Text.Trim() == "") 
-            { 
-                _executionStatus.Background = Brushes.Green; 
-                _console.Text = "Your code is empty!"; 
+            if (_textEditor.Text.Trim() == "")
+            {
+                _executionStatus.Background = Brushes.Green;
+                _console.Text = "Your code is empty!";
             }
             else
             {
@@ -272,10 +272,10 @@ namespace AvaloniaEditDemo.Views
                     SetExecutionBegin(true);
                     foreach (Button buts in _stackPanel.Children)
                     {
-                        if (buts.Background == Brushes.Green || buts.Background == Brushes.Red) 
+                        if (buts.Background == Brushes.Green || buts.Background == Brushes.Red)
                             buts.Background = Brushes.Yellow;
                     }
-                    ExecuteAllCode(_textEditor.Text);                    
+                    ExecuteAllCode(_textEditor.Text);
                     lineOfLinearDebugEnd = 0;
                     isSuccessfulRun = true;
                 }
@@ -285,14 +285,14 @@ namespace AvaloniaEditDemo.Views
                     if (isSuccessfulRun || isFirstDebugBreakpoint)
                     {
                         SetExecutionBegin(false);
-                        ExecuteCodeWithBreakpoint();                       
+                        ExecuteCodeWithBreakpoint();
                     }
                     else
                     {
-                        foreach (Button buts in _stackPanel.Children) 
-                        { 
-                            if (buts.Background == Brushes.Red) 
-                                buts.Background = Brushes.Green; 
+                        foreach (Button buts in _stackPanel.Children)
+                        {
+                            if (buts.Background == Brushes.Red)
+                                buts.Background = Brushes.Green;
                         }
                         isSuccessfulRun = true;
                         _console.Text = "Debug dropped.";
@@ -300,7 +300,7 @@ namespace AvaloniaEditDemo.Views
                         lineOfLinearDebugEnd = 0;
                         _runButton.Content = "Run";
                     }
-                }                
+                }
                 previousLine = currentLine;
             }
         }
@@ -315,16 +315,16 @@ namespace AvaloniaEditDemo.Views
             _runButton.Content = "Run";
             lineOfLinearDebugEnd = 0;
             StopAndRunChangingRoles(true);
-        }         
+        }
         async private void OpenControlBtn_Click(object sender, RoutedEventArgs e)
         {
             var openedFileDialog = new OpenFileDialog();
             openedFileDialog.Filters.Add(new FileDialogFilter() { Name = "Txt", Extensions = { "txt" } });
             var path = await openedFileDialog.ShowAsync(this);
-            if (path != null && path.Length > 0) 
-            { 
+            if (path != null && path.Length > 0)
+            {
                 _textEditor.Text = File.ReadAllText(path[0]);
-                openedFile = path[0]; 
+                openedFile = path[0];
             }
         }
         async private void SaveFileButton_Click(object sender, RoutedEventArgs e)
@@ -335,7 +335,7 @@ namespace AvaloniaEditDemo.Views
                 File.WriteAllText(path, _textEditor.Text);
         }
         private void AddChildrensRange(int begin, int count)
-        {  
+        {
             var ab = _stackPanel.Children.GetRange(begin, _stackPanel.Children.Count - begin);
             _stackPanel.Children.RemoveRange(begin, _stackPanel.Children.Count - begin);
             for (var i = 0; i < count; i++)
@@ -368,17 +368,17 @@ namespace AvaloniaEditDemo.Views
                 }
                 else if (numberOfButtons < lines)
                 {
-                    if (caretLine >= caretLineBeforeChanging) 
+                    if (caretLine >= caretLineBeforeChanging)
                         AddChildrensRange(caretLineBeforeChanging, lines - numberOfButtons);
                 } // here i need to put brackets so that the last else does not belong to the last if
-                else _stackPanel.Children.RemoveRange(caretLine, numberOfButtons - lines);                        
+                else _stackPanel.Children.RemoveRange(caretLine, numberOfButtons - lines);
             }
             caretLineBeforeChanging = caretLine;
-            textBeforeCaretChanging = _textEditor.Text;    
+            textBeforeCaretChanging = _textEditor.Text;
         }
         public void TextEditor_TextChanged(object sender, EventArgs e)
         {
             Caret_PositionChanged(this, e);
         }
-    }         
+    }
 }
