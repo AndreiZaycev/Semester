@@ -1,0 +1,13 @@
+<SyntaxDefinition name="C#"
+        xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+    <!-- This is the main ruleset. -->
+    <RuleSet>
+        <Keywords fontWeight="bold" foreground="blue">
+            <Word>let</Word>
+            <Word>print</Word>
+        </Keywords>
+        <Rule foreground="Red">
+            [0-9]+
+        </Rule>
+    </RuleSet>
+</SyntaxDefinition>
