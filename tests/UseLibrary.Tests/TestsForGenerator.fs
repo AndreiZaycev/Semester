@@ -12,30 +12,17 @@ let treesOperations =
     testList "check all operations"
         [
             testProperty "test that write and read correctly for generated matrix"
-            <| fun (rows, cols, _type) ->
-                if rows > 0 && cols > 0 && _type > 0 
+            <| fun (rows, cols, _type: Type, sparsity: float) ->
+                if rows > 0 && cols > 0 
                 then
-                    let aType = _type % 3 
-                    let helpFunction (y: Options) =
-                        let matrixPath = Path.Combine(y._path, "Matrix0.txt")
-                        generateSparseMatrix y |> ignore  
-                        let firstReadMatrix = readGeneratedMatrix matrixPath
-                        printMatrix firstReadMatrix matrixPath
-                        let secondReadMatrix = readGeneratedMatrix matrixPath
-                        let fst = Array.ofSeq (Seq.map (fun seq -> Array.ofSeq seq) firstReadMatrix)
-                        let snd = Array.ofSeq (Seq.map (fun seq -> Array.ofSeq seq) secondReadMatrix)
-                        Expect.equal fst snd "needs to be equal"
-                        
-                    match aType with
-                    | 0 ->
-                        let y = Generator.Options(rows, rows, 1, 0.5, __SOURCE_DIRECTORY__, Type.Int, System.Environment.ProcessorCount)
-                        helpFunction y 
-                    | 1 ->
-                        let y = Generator.Options(rows, rows, 1, 0.5, __SOURCE_DIRECTORY__, Type.Float, System.Environment.ProcessorCount)
-                        helpFunction y 
-                    | 2 ->
-                        let y = Generator.Options(rows, rows, 1, 0.5, __SOURCE_DIRECTORY__, Type.Bool, System.Environment.ProcessorCount)
-                        helpFunction y
-                    | _ -> ()
+                    let configuration = Generator.Options(rows, rows, 1, abs(sparsity) % 101., __SOURCE_DIRECTORY__, _type, System.Environment.ProcessorCount)
+                    let matrixPath = Path.Combine(configuration._path, "Matrix0.txt")
+                    generateSparseMatrix configuration  
+                    let firstReadMatrix = readGeneratedMatrix matrixPath
+                    printMatrix firstReadMatrix matrixPath
+                    let secondReadMatrix = readGeneratedMatrix matrixPath
+                    let fst = Array.ofSeq (Seq.map (fun seq -> Array.ofSeq seq) firstReadMatrix)
+                    let snd = Array.ofSeq (Seq.map (fun seq -> Array.ofSeq seq) secondReadMatrix)
+                    Expect.equal fst snd "needs to be equal"                                    
         ]
 

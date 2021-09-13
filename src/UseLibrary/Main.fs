@@ -26,16 +26,12 @@ type CliArguments =
 
 [<EntryPoint>]
     let main (argv: string array) =
-        let mutable streamsUsed = false
-        for i in argv do
-            if i = "--streams" then streamsUsed <- true
-        let argv =          
-            if not streamsUsed
-            then Array.append argv [| "--streams"; $"{System.Environment.ProcessorCount}" |]
-            else argv
         let parser = ArgumentParser.Create<CliArguments> (programName = "Generator")
         try
+        let streams = System.Environment.ProcessorCount
         let x = parser.Parse argv
+        if x.Contains Streams 
+        then streams = x.GetResult Streams |> ignore
         if x.GetResult Rows <= 0 || x.GetResult Cols <= 0
         then failwith "Number of rows and cols must be positive"
         elif x.GetResult Amount <= 0
@@ -53,7 +49,7 @@ type CliArguments =
                             x.GetResult(Sparsity),
                             x.GetResult(Path),
                             x.GetResult(Type),
-                            x.GetResult(Streams)
+                            streams
                         )
             Generator.generateSparseMatrix y
         0    

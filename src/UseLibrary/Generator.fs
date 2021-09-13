@@ -16,7 +16,7 @@ type Options =
     val _sparsity: float
     val _path: string
     val _type: Type
-    val _steams: int
+    val _streams: int
     new (rows, cols, amt, sparsity, path, typeOf, streams) =
         {
             _rows = rows;
@@ -25,15 +25,15 @@ type Options =
             _sparsity = sparsity;
             _path = path;
             _type = typeOf
-            _steams = streams
+            _streams = streams
         }
 
 let printMatrix (x: seq<seq<string>>) path = File.WriteAllLines(path, Seq.map (fun seq -> String.concat " " seq) x)
 
 let generateSparseMatrix (x: Options) =
     let rand = Random()
-    let chunkSize = x._amt / x._steams
-    let streams = x._steams
+    let chunkSize = x._amt / x._streams
+    let streams = x._streams
     [ for t in 0 .. streams - 1 ->
         async { do
                 let lastNum = 
