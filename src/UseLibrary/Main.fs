@@ -28,6 +28,7 @@ type CliArguments =
     let main (argv: string array) =
         let parser = ArgumentParser.Create<CliArguments> (programName = "Generator")
         try
+        let processors = System.Environment.ProcessorCount
         let x = parser.Parse argv
         if x.GetResult Rows <= 0 || x.GetResult Cols <= 0
         then failwith "Number of rows and cols must be positive"
@@ -37,6 +38,8 @@ type CliArguments =
         then failwith "The sparsity should be defined as a number between 0.0 and 1.0"
         elif not (Directory.Exists (x.GetResult Path))
         then failwith "The specified path does not exist"
+        elif x.GetResult(Streams, processors) <= 0 || x.GetResult(Streams, processors) > processors * 2 
+        then failwith "Number of streams should be in range 1..(Number of your processors * 2)"
         else
             let y = Generator.Options
                         (
@@ -46,7 +49,7 @@ type CliArguments =
                             x.GetResult(Sparsity),
                             x.GetResult(Path),
                             x.GetResult(Type),
-                            x.GetResult(Streams, System.Environment.ProcessorCount)
+                            x.GetResult(Streams, processors)
                         )
             Generator.generateSparseMatrix y
         0    
