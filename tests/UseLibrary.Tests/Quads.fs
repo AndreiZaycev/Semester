@@ -88,8 +88,8 @@ let treesOperations =
                 if k > 0 && abs k < 6
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    let y = (QuadTreeMatrix.Create (QuadTreeMatrix.ToMatrix (QuadTreeMatrix.Create (snd x))))
-                    let z = QuadTreeMatrix.Create (snd x)
+                    let y = (Create (ToMatrix (Create (snd x))))
+                    let z = Create (snd x)
                     Expect.equal y z "needs to be equal"
 
             testProperty "tensor mult on matrix and on trees id №2"
@@ -98,7 +98,7 @@ let treesOperations =
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
                     let y = generator (pown 2 (abs k)) (pown 2 (abs k))   
-                    Expect.equal (QuadTreeMatrix.Create (createEM (tensor (fst x) (fst y)))) (QuadTreeMatrix.TensorMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y))) "needs to be equal"
+                    Expect.equal (Create (createEM (tensor (fst x) (fst y)))) (TensorMultiply group (Create (snd x)) (Create (snd y))) "needs to be equal"
 
             testProperty "standart mult matrix and on trees id1"
             <| fun (k: int, t: int, p: int) ->
@@ -108,8 +108,8 @@ let treesOperations =
                     let y = generator (abs k) (abs p)
                     let output = Array2D.zeroCreate (abs t) (abs p)
                     let fTree =
-                        QuadTreeMatrix.ToMatrix
-                            (QuadTreeMatrix.ParallelMultiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y)))
+                        ToMatrix
+                            (ParallelMultiply group (Create (snd x)) (Create (snd y)))
 
                     for i in fTree.notEmptyData do
                         output.[int i.coordinates.x, int i.coordinates.y] <- i.data
@@ -125,8 +125,8 @@ let treesOperations =
                     let y = generator (abs k) (abs p)
                     let output = Array2D.zeroCreate (abs t) (abs p)
                     let fTree =
-                        QuadTreeMatrix.ToMatrix
-                            (QuadTreeMatrix.Multiply group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y)))
+                        ToMatrix
+                            (Multiply group (Create (snd x)) (Create (snd y)))
 
                     for i in fTree.notEmptyData do
                         output.[int i.coordinates.x, int i.coordinates.y] <- i.data
@@ -141,7 +141,7 @@ let treesOperations =
                 if k <> 0 && abs k < 7
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    Expect.equal (QuadTreeMatrix.Create (createEM (multiplyByScalar scalar (fst x)))) (QuadTreeMatrix.MultiplyScalar group scalar (QuadTreeMatrix.Create (snd x))) "id"
+                    Expect.equal (Create (createEM (multiplyByScalar scalar (fst x)))) (MultiplyScalar group scalar (Create (snd x))) "id"
 
             testProperty "standart sum matrix and on trees id"
             <| fun (k: int) ->
@@ -149,6 +149,6 @@ let treesOperations =
                 then
                     let x = generator (pown 2 (abs k)) (pown 2 (abs k))
                     let y = generator (pown 2 (abs k)) (pown 2 (abs k))
-                    Expect.equal (QuadTreeMatrix.Create (createEM (sumMtx (fst x) (fst y)))) (QuadTreeMatrix.Sum group (QuadTreeMatrix.Create (snd x)) (QuadTreeMatrix.Create (snd y))) "needs to be equal"
+                    Expect.equal (Create (createEM (sumMtx (fst x) (fst y)))) (Sum group (Create (snd x)) (Create (snd y))) "needs to be equal"
         ]
 
