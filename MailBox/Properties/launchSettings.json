@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MailBox": {
+      "commandName": "Project",
+      "commandLineArgs": "--readdirectory \"C:\\Users\\Zver\\Desktop\\input matrixes\" --writedirectory \"C:\\Users\\Zver\\Desktop\\output matrixes\"  --sparsitybound 0,1 --amount 5000"
+    }
+  }
+}
