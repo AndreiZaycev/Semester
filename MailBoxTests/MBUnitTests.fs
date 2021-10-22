@@ -11,8 +11,8 @@ let generatedMatrices = __SOURCE_DIRECTORY__ + "/generatedMatrices"
 [<Literal>]
 let multipliedMatrices = __SOURCE_DIRECTORY__ + "/multipliedMatrices"
 
-Directory.CreateDirectory(generatedMatrices)
-Directory.CreateDirectory(multipliedMatrices)
+Directory.CreateDirectory(generatedMatrices) |> ignore
+Directory.CreateDirectory(multipliedMatrices) |> ignore 
 
 let generateAndMultiply size amt =
     let generatorConfig = Options(size, size, amt, 0.5, generatedMatrices, Int, 8)
