@@ -6,6 +6,9 @@ type MultiplyingMethod =
     | ArrayParallel
     | ArrayStandart
 
+[<Literal>]
+let sizeOfMtx = 64
+
 type Config =
     val Files: string list
     val PrintPath: string
@@ -17,7 +20,7 @@ type Config =
                     match amount with
                     | x when x % 2 = 1 -> failwith "Number of files is not even"
                     | x when x <= 0 -> failwith "Amount should be positive integer"
-                    | x when x * 2 > fileNames.Length -> failwith "Not enough files to load"
+                    | x when x > 2 * fileNames.Length -> failwith "Not enough files to load"
                     | _ -> fileNames.[ .. amount * 2 - 1]
                 files
             PrintPath = printPath;
@@ -35,10 +38,10 @@ type Config =
                 else lowerBound;
     }
 
-    member this.defineMultiplication sparsityFirst sparsitySecond =
+    member this.defineMultiplication sparsityFirst sparsitySecond size =
         match (sparsityFirst, sparsitySecond) with
-            | i, j when i < this.SparsityBound && j < this.SparsityBound -> QuadTreeStandart
-            | i, j when i < this.SparsityBound && j > this.SparsityBound -> QuadTreeParallel
-            | i, j when i > this.SparsityBound && j > this.SparsityBound  -> ArrayParallel
-            | i, j when i > this.SparsityBound && j < this.SparsityBound -> ArrayStandart
-            | _, _ -> ArrayParallel
+            | i, j when i < this.SparsityBound && j < this.SparsityBound && size < sizeOfMtx -> QuadTreeStandart
+            | i, j when i < this.SparsityBound && j > this.SparsityBound && size > sizeOfMtx -> QuadTreeParallel
+            | i, j when i > this.SparsityBound && j > this.SparsityBound && size > sizeOfMtx  -> ArrayParallel
+            | _, _ -> ArrayStandart
+

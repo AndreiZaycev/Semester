@@ -6,14 +6,8 @@ open Balancer
 open TestsForGenerator
 open System.IO
 
-let read path = 
-    let fst = Array.ofSeq (Seq.map (fun seq -> Array.ofSeq (Seq.map (fun elem -> int elem) seq)) (readGeneratedMatrix path))
-    let array2D = Array2D.zeroCreate fst.[0].Length fst.Length
-    for i in 0 .. fst.[0].Length - 1 do 
-        for j in 0 .. fst.Length - 1 do 
-            array2D.[i, j] <- fst.[i].[j]
-    array2D
-
+let read path = (readGeneratedMatrix path) |> Seq.map (fun elem -> Seq.map (fun elem1 -> int elem1) elem) |> array2D<_,_> 
+    
 let loader (config: Config) =
     let balancer = balancer config
     MailboxProcessor.Start(fun (inbox: MailboxProcessor<LoaderMessage>) ->

@@ -6,15 +6,11 @@ open SparseMatrix
 open Multiplier
 open AlgebraicStruct
 open Quads
+open Matrix
 
-let evaluateSparsity (mtx: int[,]) =
-    let mutable nons = 0.
-    let numOfElems = mtx.GetLength(1) * mtx.GetLength(0)
-    for i in 0 .. mtx.GetLength(0) - 1 do
-        for j in 0 .. mtx.GetLength(1) - 1 do
-            if mtx.[i, j] = 0
-            then nons <- nons + 1.
-    nons / float numOfElems
+let quadTreeInitialize (matrix: int[,]) = 
+    let sparseMatrix = createEM matrix
+    create (toMatrix (create sparseMatrix))
 
 let balancer (config: Config) =
     let y = new Monoid<int>((+), 0)
@@ -41,11 +37,12 @@ let balancer (config: Config) =
                     arrayStandart.PostAndReply BalancerMessage.EOS
                     ch.Reply()
                 | NamedPair ((fst, _), (snd, _)) as pair ->
-                    match config.defineMultiplication (evaluateSparsity fst) (evaluateSparsity snd) with
+                    let maxSize = max (size fst) (size snd)
+                    match config.defineMultiplication (evaluateSparsity fst) (evaluateSparsity snd) maxSize with
                         | QuadTreeParallel -> quadTreeParallel.Post pair 
                         | QuadTreeStandart -> quadTreeStandart.Post pair
                         | ArrayParallel -> arrayParallel.Post pair
-                        | ArrayStandart -> arrayParallel.Post pair
+                        | ArrayStandart -> arrayStandart.Post pair
                     return! loop ()
             }
         loop ()
