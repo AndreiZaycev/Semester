@@ -1,4 +1,4 @@
-module MailBoxProcessorTests
+module MBUnitTests
 open System.IO
 open Expecto
 open Generator
